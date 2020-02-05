@@ -2,7 +2,7 @@
 
 namespace DbInstallation.Database
 {
-    public static class ConnectionString
+    public static class ProductConnectionString
     {
         private static string _oracleConnectionString
         {
@@ -20,13 +20,13 @@ namespace DbInstallation.Database
             }
         }
 
-        public static string GetConnectionString(DatabaseProperties databaseProperties, IrpjDbType dbType)
+        public static string GetConnectionString(DatabaseProperties databaseProperties, ProductDbType dbType)
         {
-            if(dbType == IrpjDbType.Oracle)
+            if(dbType == ProductDbType.Oracle)
             {
                 return string.Format(_oracleConnectionString, databaseProperties.DataBaseUser, databaseProperties.DatabasePassword, databaseProperties.ServerOrTns);
             }
-            else if (dbType == IrpjDbType.SqlServer)
+            else if (dbType == ProductDbType.SqlServer)
             {
                 return string.Format(_sqlServerConnectionString, databaseProperties.DataBaseUser, databaseProperties.DatabasePassword, databaseProperties.ServerOrTns);
             }

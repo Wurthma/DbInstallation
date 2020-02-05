@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DbInstallation.Enums
+﻿namespace DbInstallation.Enums
 {
     public static class EnumDbType
     {
-        public enum IrpjDbType
+        public enum ProductDbType
         {
+            None = 0,
             Oracle = 1,
             SqlServer = 2
         }

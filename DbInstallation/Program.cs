@@ -14,7 +14,7 @@ namespace DbInstallation
         {
             try
             {
-                SelectDatabase(new IrpjDatabase());
+                SelectDatabase(new ProductDatabase());
             }
             catch (Exception ex)
             {
@@ -22,26 +22,25 @@ namespace DbInstallation
             }
         }
 
-        public static void SelectDatabase(IrpjDatabase irpjDatabase)
+        private static void SelectDatabase(ProductDatabase productDatabase)
         {
             Console.WriteLine("Type to select database type:");
             Console.WriteLine("(O) - Oracle");
             Console.WriteLine("(S) - SQL Server");
-            string dbType = Console.ReadLine();
+            
+            ProductDbType dbType = productDatabase.GetDatabaseType(Console.ReadLine());
 
-            switch (dbType.ToUpper())
-            {
-                case "O":
-                    Logger.Info("Selected Oracle Database");
-                    irpjDatabase.SetConnection(IrpjDbType.Oracle);
-                    break;
-                case "S":
-                    Logger.Info("Selected SQL Server Database");
-                    irpjDatabase.SetConnection(IrpjDbType.SqlServer);
-                    break;
-                default:
-                    break;
-            }
+            productDatabase.SetConnection(dbType);
+            SelectOperation(dbType, productDatabase);
+        }
+
+        private static void SelectOperation(ProductDbType dbType, ProductDatabase productDatabase)
+        {
+            Console.WriteLine("Type to select operation:");
+            Console.WriteLine("(I) - Install");
+            Console.WriteLine("(U) - Update");
+
+            throw new NotImplementedException(); //TODO:
         }
     }
 }

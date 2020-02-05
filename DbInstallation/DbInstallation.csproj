@@ -18,8 +18,46 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Database\ScriptInstallation\SqlServer\" />
-    <Folder Include="Database\ScriptInstallation\Oracle\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Install\Carga\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Install\Custom\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Install\Functions\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Install\Package\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Install\Platypus\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Install\Procedure\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Install\Sequence\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Install\Trigger\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Carga\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Constraints\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Custom\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Functions\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Package\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Platypus\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Procedure\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Sequence\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Table\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\Trigger\" />
+    <Folder Include="Database\ScriptInstallation\Oracle\Update\93\View\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Carga\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Constraints\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Custom\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Functions\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Package\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Platypus\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Procedure\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Table\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\Trigger\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Install\View\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Carga\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Constraints\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Custom\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Functions\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\View\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Trigger\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Table\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Procedure\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Platypus\" />
+    <Folder Include="Database\ScriptInstallation\SqlServer\Update\93\Package\" />
   </ItemGroup>
 
 </Project>
