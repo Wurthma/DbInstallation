@@ -7,7 +7,5 @@ namespace DbInstallation.Interfaces
     public interface IDatabaseFunctions
     {
         bool TestConnection();
-
-        bool CheckDatabaseInstall();
     }
 }

@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DbInstallation.Database
+﻿namespace DbInstallation.Database
 {
-    public abstract class BaseInstallationDbFunctions
+    public abstract class BaseDatabaseOperationFunctions
     {
         
 
-        protected BaseInstallationDbFunctions(DatabaseProperties databaseProperties)
+        protected BaseDatabaseOperationFunctions(DatabaseProperties databaseProperties)
         {
             DatabaseProperties = databaseProperties;
         }
