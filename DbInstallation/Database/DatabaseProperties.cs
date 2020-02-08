@@ -1,8 +1,6 @@
 ﻿using DbInstallation.Interfaces;
 using NLog;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DbInstallation.Database
 {
@@ -10,11 +8,26 @@ namespace DbInstallation.Database
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public DatabaseProperties(string dataBaseUser, string databasePassword, string serverOrTns)
+        public DatabaseProperties(string dataBaseUser, string databasePassword, string serverOrTns, string tablespaceData, string tablespaceIndex)
         {
             DataBaseUser = dataBaseUser;
             DatabasePassword = databasePassword;
             ServerOrTns = serverOrTns;
+            TablespaceData = tablespaceData;
+            TablespaceIndex = tablespaceIndex;
+            DatabaseName = null;
+            IsTrustedConnection = false;
+        }
+
+        public DatabaseProperties(string dataBaseUser, string databasePassword, string serverOrTns, string databaseName, bool isTrustedConnection)
+        {
+            DataBaseUser = dataBaseUser;
+            DatabasePassword = databasePassword;
+            ServerOrTns = serverOrTns;
+            TablespaceData = null;
+            TablespaceIndex = null;
+            DatabaseName = databaseName;
+            IsTrustedConnection = isTrustedConnection;
         }
 
         public string DataBaseUser { get; private set; }
@@ -22,6 +35,14 @@ namespace DbInstallation.Database
         public string DatabasePassword { get; private set; }
 
         public string ServerOrTns { get; private set; }
+
+        public string TablespaceData { get; private set; }
+
+        public string TablespaceIndex { get; private set; }
+
+        public string DatabaseName { get; private set; }
+
+        public bool IsTrustedConnection { get; private set; }
 
         private bool ValidateProperties()
         {

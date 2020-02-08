@@ -20,6 +20,14 @@ namespace DbInstallation.Database
             }
         }
 
+        private static string _sqlServerTrustedConnectionString
+        {
+            get
+            {
+                return "Server={0};Database={1};Trusted_Connection=True;";
+            }
+        }
+
         public static string GetConnectionString(DatabaseProperties databaseProperties, ProductDbType dbType)
         {
             if(dbType == ProductDbType.Oracle)
@@ -28,7 +36,14 @@ namespace DbInstallation.Database
             }
             else if (dbType == ProductDbType.SqlServer)
             {
-                return string.Format(_sqlServerConnectionString, databaseProperties.DataBaseUser, databaseProperties.DatabasePassword, databaseProperties.ServerOrTns);
+                if (databaseProperties.IsTrustedConnection)
+                {
+                    return string.Format(_sqlServerTrustedConnectionString, databaseProperties.ServerOrTns, databaseProperties.DatabaseName);
+                }
+                else
+                {
+                    return string.Format(_sqlServerConnectionString, databaseProperties.ServerOrTns, databaseProperties.DatabaseName, databaseProperties.DataBaseUser, databaseProperties.DatabasePassword);
+                }
             }
             return null;
         }

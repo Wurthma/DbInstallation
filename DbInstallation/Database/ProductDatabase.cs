@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using DbInstallation.Interfaces;
+using NLog;
 using System;
 using static DbInstallation.Enums.EnumDbType;
 using static DbInstallation.Enums.EnumOperation;
@@ -16,23 +17,16 @@ namespace DbInstallation.Database
             _isConnectionDefined = false;
         }
 
-        private OracleOperationFunctions _oracleOperationFunctions { get; set; }
-
-        private SqlServerOperationFunctions _sqlServerOperationFunctions { get; set; }
-
         public bool SetConnection(ProductDbType dbType)
         {
-            if(dbType == ProductDbType.Oracle)
+            
+            if(dbType == ProductDbType.None)
             {
-                return SetOracleConnection();
-            }
-            else if(dbType == ProductDbType.SqlServer)
-            {
-                return SetSqlServerConnection();
+                throw new InvalidOperationException("Invalid Database type option.");
             }
             else
             {
-                throw new InvalidOperationException("Invalid Database type option.");
+                return Connect(dbType);
             }
         }
 
@@ -96,7 +90,7 @@ namespace DbInstallation.Database
         {
             if(dbType == ProductDbType.Oracle)
             {
-                _oracleOperationFunctions.Install();
+                //_oracleOperationFunctions.Install(); //TODO:
             }
             else if (dbType == ProductDbType.SqlServer)
             {
@@ -109,23 +103,22 @@ namespace DbInstallation.Database
             throw new NotImplementedException(); //TODO:
         }
 
-        private bool SetOracleConnection()
+        private bool Connect(ProductDbType dbType)
         {
-            DatabaseProperties databaseProperties = RequestDbInputsProperties();
-            Console.WriteLine("Enter data TABLESPACE:");
-            string tablespaceData = Console.ReadLine();
-            Console.WriteLine("Enter index TABLESPACE:");
-            string tablespaceIndex = Console.ReadLine();
-
-            OracleOperationFunctions oracleOperationFunctions = new OracleOperationFunctions(
-                databaseProperties,
-                tablespaceData,
-                tablespaceIndex);
+            DatabaseProperties databaseProperties = RequestDbInputsProperties(dbType);
+            IDatabaseFunctions databaseFunctions;
+            if (dbType == ProductDbType.Oracle)
+            {
+                databaseFunctions = new OracleOperationFunctions(databaseProperties);
+            }
+            else
+            {
+                databaseFunctions = new SqlServerOperationFunctions(databaseProperties);
+            }
 
             try
             {
-                _isConnectionDefined = oracleOperationFunctions.TestConnection();
-                _oracleOperationFunctions = oracleOperationFunctions;
+                _isConnectionDefined = databaseFunctions.TestConnection();
                 return _isConnectionDefined;
             }
             catch (Exception ex)
@@ -135,38 +128,70 @@ namespace DbInstallation.Database
             }
         }
 
-        private bool SetSqlServerConnection()
+        private DatabaseProperties RequestDbInputsProperties(ProductDbType dbType)
         {
-            //TODO: criar opção para escolher Trusted connection (windows)
-            DatabaseProperties databaseProperties = RequestDbInputsProperties();
-            Console.WriteLine("Enter Sql Server Database Name:");
-            string databaseName = Console.ReadLine();
-            
-            SqlServerOperationFunctions sqlServerOperationFunctions = new SqlServerOperationFunctions(databaseProperties, databaseName);
+            string dbUser = null;
+            string dbPassword = null;
 
-            try
+            if (dbType == ProductDbType.SqlServer)
             {
-                _isConnectionDefined = sqlServerOperationFunctions.TestConnection();
-                _sqlServerOperationFunctions = sqlServerOperationFunctions;
-                return _isConnectionDefined;
+                bool isTrustedConnection = RequestSqlServerTrustedConnection();
+                Console.WriteLine("Enter Sql Server Database Name:");
+                string databaseName = Console.ReadLine();
+                
+                if (!isTrustedConnection)
+                {
+                    dbUser = RequestDatabaseUser();
+                    dbPassword = RequestDatabasePassword();
+                }
+
+                Console.WriteLine("Enter the Server name:");
+                string serverName = Console.ReadLine();
+                return new DatabaseProperties(dbUser, dbPassword, serverName, databaseName, isTrustedConnection);
             }
-            catch (Exception ex)
+            else if(dbType == ProductDbType.Oracle)
             {
-                Logger.Error(ex, ex.Message);
-                throw ex;
+                dbUser = RequestDatabaseUser();
+                dbPassword = RequestDatabasePassword();
+
+                Console.WriteLine("Enter data TABLESPACE:");
+                string tablespaceData = Console.ReadLine().ToUpper();
+                Console.WriteLine("Enter index TABLESPACE:");
+                string tablespaceIndex = Console.ReadLine().ToUpper();
+                Console.WriteLine("Enter the TNS connection string:");
+                string tnsOrServerConnection = Console.ReadLine();
+                return new DatabaseProperties(dbUser, dbPassword, tnsOrServerConnection, tablespaceData, tablespaceIndex);
+            }
+            else
+            {
+                throw new Exception("Database type is not defined.");
             }
         }
 
-        private DatabaseProperties RequestDbInputsProperties()
+        private string RequestDatabaseUser()
         {
             Console.WriteLine("Enter database user:");
-            string dbUser = Console.ReadLine();
-            Console.WriteLine("Enter the password:");
-            string dbPassword = Console.ReadLine();
-            Console.WriteLine("Enter the Server or TNS:");
-            string tnsConnection = Console.ReadLine();
+            return Console.ReadLine();
+        }
 
-            return new DatabaseProperties(dbUser, dbPassword, tnsConnection);
+        private string RequestDatabasePassword()
+        {
+            Console.WriteLine("Enter the password:");
+            return Console.ReadLine();
+        }
+
+        private bool RequestSqlServerTrustedConnection()
+        {
+            Console.WriteLine("Choose authenticationi type:");
+            Console.WriteLine("(W) Windows");
+            Console.WriteLine("(U) Sql Server User");
+            string authType = Console.ReadLine();
+
+            if (authType.ToUpper() != "W" && authType.ToUpper() != "U")
+            {
+                throw new Exception($@"Invalid Sql Server type connection '{authType}'.");
+            }
+            return authType.ToUpper() == "W";
         }
     }
 }

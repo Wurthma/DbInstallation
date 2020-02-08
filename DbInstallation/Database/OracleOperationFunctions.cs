@@ -11,15 +11,9 @@ namespace DbInstallation.Database
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public string TablespaceData { get; private set; }
-
-        public string TablespaceIndex { get; private set; }
-
-        public OracleOperationFunctions(DatabaseProperties databaseProperties, string tablespaceData, string tablespaceIndex)
+        public OracleOperationFunctions(DatabaseProperties databaseProperties)
             : base(databaseProperties)
         {
-            TablespaceData = tablespaceData.ToUpper();
-            TablespaceIndex = tablespaceIndex.ToUpper();
             base.SetConnectionString(ProductConnectionString.GetConnectionString(databaseProperties, ProductDbType.Oracle));
         }
 
@@ -70,16 +64,16 @@ namespace DbInstallation.Database
             Console.WriteLine(Environment.NewLine);
             bool isOk = CheckEmptyDatabase() && 
                         ValidateDatabaseUser() && 
-                        ValidateTableSpace(TablespaceData) && 
-                        ValidateTableSpace(TablespaceIndex) && 
+                        ValidateTableSpace(DatabaseProperties.TablespaceData) && 
+                        ValidateTableSpace(DatabaseProperties.TablespaceIndex) && 
                         ValidateDbmsCryptoAccess();
 
             if (isOk)
             {
                 Logger.Info("OK: Validations carried out with SUCCESS!");
                 Logger.Info($@"OK: User/Connection: {DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}.");
-                Logger.Info($@"OK: Data tablespace {TablespaceData}.");
-                Logger.Info($@"OK: Index tablespace {TablespaceIndex}.");
+                Logger.Info($@"OK: Data tablespace {DatabaseProperties.TablespaceData}.");
+                Logger.Info($@"OK: Index tablespace {DatabaseProperties.TablespaceIndex}.");
             }
 
             return isOk;
