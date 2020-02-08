@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DbInstallation.Interfaces
+﻿namespace DbInstallation.Interfaces
 {
     public interface IDatabaseProperties
     {
@@ -11,5 +7,13 @@ namespace DbInstallation.Interfaces
         string DatabasePassword { get; }
 
         string ServerOrTns { get; }
+
+        string TablespaceData { get; }
+
+        string TablespaceIndex { get; }
+
+        string DatabaseName { get; }
+
+        bool IsTrustedConnection { get; }
     }
 }

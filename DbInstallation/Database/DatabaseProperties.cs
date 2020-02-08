@@ -66,6 +66,8 @@ namespace DbInstallation.Database
             return isValid;
         }
 
+        //TODO: realizar restante das validações da classe
+
         private void LoggerNullException(string propertie)
         {
             var ex = new ArgumentNullException($@"The propertie {propertie} from {nameof(DatabaseProperties)} class canot be null.");
