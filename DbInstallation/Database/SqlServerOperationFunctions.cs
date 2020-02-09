@@ -69,7 +69,7 @@ namespace DbInstallation.Database
             if (isOk)
             {
                 Logger.Info(Messages.Message003);
-                Logger.Info($@"OK: User/Connection: {DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}.");
+                Logger.Info($@"OK: User/Connection: {DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}.");
             }
 
             return isOk;
@@ -93,7 +93,7 @@ namespace DbInstallation.Database
                     }
                     else
                     {
-                        throw new Exception(Messages.ErrorMessage003("SYS.OBJECTS", $@"{DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}"));
+                        throw new Exception(Messages.ErrorMessage003("SYS.OBJECTS", $@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
                     }
                 }
                 return emptyDatabase;

@@ -2,7 +2,7 @@
 {
     public interface IDatabaseProperties
     {
-        string DataBaseUser { get; }
+        string DatabaseUser { get; }
 
         string DatabasePassword { get; }
 

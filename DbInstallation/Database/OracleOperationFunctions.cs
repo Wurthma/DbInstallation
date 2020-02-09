@@ -30,7 +30,7 @@ namespace DbInstallation.Database
                     OracleDataAdapter oda = new OracleDataAdapter(sql, oc);
                     DataTable dt = new DataTable();
                     oda.Fill(dt);
-                    string dbNameAndStatus = $@"{DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns} : Database State: {oc.State}";
+                    string dbNameAndStatus = $@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns} : Database State: {oc.State}";
                     if (dt.Rows.Count == 0)
                     {
                         Logger.Info(Messages.ErrorMessage002(dbNameAndStatus));
@@ -71,7 +71,7 @@ namespace DbInstallation.Database
             if (isOk)
             {
                 Logger.Info(Messages.Message003);
-                Logger.Info(Messages.Message004(DatabaseProperties.DataBaseUser, DatabaseProperties.ServerOrTns));
+                Logger.Info(Messages.Message004(DatabaseProperties.DatabaseUser, DatabaseProperties.ServerOrTns));
                 Logger.Info(Messages.Message005(DatabaseProperties.TablespaceData));
                 Logger.Info(Messages.Message006(DatabaseProperties.TablespaceIndex));
             }
@@ -100,7 +100,7 @@ namespace DbInstallation.Database
                     }
                     else
                     {
-                        throw new Exception(Messages.ErrorMessage003("USER_OBJECTS", $@"{DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}"));
+                        throw new Exception(Messages.ErrorMessage003("USER_OBJECTS", $@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
                     }
                 }
                 return emptyDatabase;
@@ -114,7 +114,7 @@ namespace DbInstallation.Database
 
         private bool ValidateDatabaseUser()
         {
-            string userDb = DatabaseProperties.DataBaseUser.ToUpper();
+            string userDb = DatabaseProperties.DatabaseUser.ToUpper();
             if (userDb != "SYS" && userDb != "SYSTEM")
             {
                 return true;
@@ -151,7 +151,7 @@ namespace DbInstallation.Database
                     }
                     else
                     {
-                        Logger.Error($@"Failed to check tablespace to database {DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}.");
+                        Logger.Error($@"Failed to check tablespace to database {DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}.");
                         validTablespace = false;
                     }
                 }
@@ -184,14 +184,14 @@ namespace DbInstallation.Database
                         hasAccess = reader.GetInt32(0) == 1;
                         if (!hasAccess)
                         {
-                            Logger.Error($@"User '{DatabaseProperties.DataBaseUser}' does not have a grant for DBMS_CRYPTO.");
+                            Logger.Error($@"User '{DatabaseProperties.DatabaseUser}' does not have a grant for DBMS_CRYPTO.");
                             Logger.Error($@"Please run the following command as a SYS user:");
-                            Logger.Error($@"grant execute on DBMS_CRYPTO to {DatabaseProperties.DataBaseUser};");
+                            Logger.Error($@"grant execute on DBMS_CRYPTO to {DatabaseProperties.DatabaseUser};");
                         }
                     }
                     else
                     {
-                        Logger.Error($@"Failed to check access to DBMS_CRYPTO | {DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}.");
+                        Logger.Error($@"Failed to check access to DBMS_CRYPTO | {DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}.");
                         hasAccess = false;
                     }
                 }

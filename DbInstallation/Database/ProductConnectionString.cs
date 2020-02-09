@@ -32,7 +32,7 @@ namespace DbInstallation.Database
         {
             if(dbType == ProductDbType.Oracle)
             {
-                return string.Format(_oracleConnectionString, databaseProperties.DataBaseUser, databaseProperties.DatabasePassword, databaseProperties.ServerOrTns);
+                return string.Format(_oracleConnectionString, databaseProperties.DatabaseUser, databaseProperties.DatabasePassword, databaseProperties.ServerOrTns);
             }
             else if (dbType == ProductDbType.SqlServer)
             {
@@ -42,7 +42,7 @@ namespace DbInstallation.Database
                 }
                 else
                 {
-                    return string.Format(_sqlServerConnectionString, databaseProperties.ServerOrTns, databaseProperties.DatabaseName, databaseProperties.DataBaseUser, databaseProperties.DatabasePassword);
+                    return string.Format(_sqlServerConnectionString, databaseProperties.ServerOrTns, databaseProperties.DatabaseName, databaseProperties.DatabaseUser, databaseProperties.DatabasePassword);
                 }
             }
             return null;
