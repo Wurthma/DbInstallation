@@ -36,7 +36,7 @@ namespace DbInstallation
             }
             else
             {
-                throw new Exception("Failure with the connection or with the validations of the database. Check the log for more details.");
+                throw new Exception(Messages.ErrorMessage001);
             }
         }
 

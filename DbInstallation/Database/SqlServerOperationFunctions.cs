@@ -30,13 +30,13 @@ namespace DbInstallation.Database
                     if (reader.Read())
                     {
                         if (reader.GetInt32(0) == 1)
-                            Logger.Info($@"Connection successfully made to the database {DatabaseProperties.ServerOrTns}/{DatabaseProperties.DatabaseName}.");
+                            Logger.Info(Messages.Message001($@"{DatabaseProperties.ServerOrTns}/{DatabaseProperties.DatabaseName}"));
                         else
                             return false;
                     }
                     else
                     {
-                        Logger.Error($@"Failed to execute basic instruction after connecting to the database {DatabaseProperties.ServerOrTns}/{DatabaseProperties.DatabaseName}.");
+                        Logger.Error(Messages.ErrorMessage002($@"{DatabaseProperties.ServerOrTns}/{DatabaseProperties.DatabaseName}"));
                         return false;
                     }
                 }
@@ -62,13 +62,13 @@ namespace DbInstallation.Database
         private bool ValidateDatabase()
         {
             Console.WriteLine(Environment.NewLine);
-            Console.WriteLine("Checking database settings...");
+            Console.WriteLine(Messages.Message002);
             Console.WriteLine(Environment.NewLine);
             bool isOk = CheckEmptyDatabase();
 
             if (isOk)
             {
-                Logger.Info("OK: Validations carried out with SUCCESS!");
+                Logger.Info(Messages.Message003);
                 Logger.Info($@"OK: User/Connection: {DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}.");
             }
 
@@ -93,7 +93,7 @@ namespace DbInstallation.Database
                     }
                     else
                     {
-                        throw new Exception($@"Failed to check SYS.OBJECTS in database {DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}.");
+                        throw new Exception(Messages.ErrorMessage003("SYS.OBJECTS", $@"{DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}"));
                     }
                 }
                 return emptyDatabase;

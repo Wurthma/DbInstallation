@@ -22,7 +22,7 @@ namespace DbInstallation.Database
             
             if(dbType == ProductDbType.None)
             {
-                throw new InvalidOperationException("Invalid Database type option.");
+                throw new InvalidOperationException(Messages.ErrorMessage007);
             }
             else
             {
@@ -77,12 +77,12 @@ namespace DbInstallation.Database
                 }
                 else
                 {
-                    throw new InvalidOperationException("Invalid Database operation.");
+                    throw new InvalidOperationException(Messages.ErrorMessage005);
                 }
             }
             else
             {
-                throw new Exception("Database connection was not defined.");
+                throw new Exception(Messages.ErrorMessage004);
             }
         }
 
@@ -164,7 +164,7 @@ namespace DbInstallation.Database
             }
             else
             {
-                throw new Exception("Database type is not defined.");
+                throw new Exception(Messages.ErrorMessage006);
             }
         }
 

@@ -33,10 +33,10 @@ namespace DbInstallation.Database
                     string dbNameAndStatus = $@"{DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns} : Database State: {oc.State}";
                     if (dt.Rows.Count == 0)
                     {
-                        Logger.Info($@"Failed to execute basic instruction after connecting to the database {dbNameAndStatus}");
+                        Logger.Info(Messages.ErrorMessage002(dbNameAndStatus));
                         return false;
                     }
-                    Logger.Info($@"Connection successfully made to the database {dbNameAndStatus}");
+                    Logger.Info(Messages.Message001(dbNameAndStatus));
                 }
                 return ValidateDatabase();
             }
@@ -60,7 +60,7 @@ namespace DbInstallation.Database
         private bool ValidateDatabase() 
         {
             Console.WriteLine(Environment.NewLine);
-            Console.WriteLine("Checking database settings...");
+            Console.WriteLine(Messages.Message002);
             Console.WriteLine(Environment.NewLine);
             bool isOk = CheckEmptyDatabase() && 
                         ValidateDatabaseUser() && 
@@ -70,10 +70,10 @@ namespace DbInstallation.Database
 
             if (isOk)
             {
-                Logger.Info("OK: Validations carried out with SUCCESS!");
-                Logger.Info($@"OK: User/Connection: {DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}.");
-                Logger.Info($@"OK: Data tablespace {DatabaseProperties.TablespaceData}.");
-                Logger.Info($@"OK: Index tablespace {DatabaseProperties.TablespaceIndex}.");
+                Logger.Info(Messages.Message003);
+                Logger.Info(Messages.Message004(DatabaseProperties.DataBaseUser, DatabaseProperties.ServerOrTns));
+                Logger.Info(Messages.Message005(DatabaseProperties.TablespaceData));
+                Logger.Info(Messages.Message006(DatabaseProperties.TablespaceIndex));
             }
 
             return isOk;
@@ -100,7 +100,7 @@ namespace DbInstallation.Database
                     }
                     else
                     {
-                        throw new Exception($@"Failed to check USER_OBJECTS in database {DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}.");
+                        throw new Exception(Messages.ErrorMessage003("USER_OBJECTS", $@"{DatabaseProperties.DataBaseUser}/{DatabaseProperties.ServerOrTns}"));
                     }
                 }
                 return emptyDatabase;
