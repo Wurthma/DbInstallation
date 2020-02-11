@@ -12,6 +12,8 @@ namespace DbInstallation.Database
 
         private bool _isConnectionDefined;
 
+        public IDatabaseFunctions DatabaseFunctions { get; private set; }
+
         public ProductDatabase()
         {
             _isConnectionDefined = false;
@@ -69,11 +71,11 @@ namespace DbInstallation.Database
             {
                 if (operationType == OperationType.Install)
                 {
-                    InstallDatabase(dbType);
+                    DatabaseFunctions.Install();
                 }
                 else if (operationType == OperationType.Update)
                 {
-                    UpdateDatabase(dbType);
+                    DatabaseFunctions.Update();
                 }
                 else
                 {
@@ -84,23 +86,6 @@ namespace DbInstallation.Database
             {
                 throw new Exception(Messages.ErrorMessage004);
             }
-        }
-
-        private void InstallDatabase(ProductDbType dbType)
-        {
-            if(dbType == ProductDbType.Oracle)
-            {
-                //_oracleOperationFunctions.Install(); //TODO:
-            }
-            else if (dbType == ProductDbType.SqlServer)
-            {
-                //_sqlServerOperationFunctions.CheckDatabaseInstall(); //TODO:
-            }
-        }
-
-        private void UpdateDatabase(ProductDbType dbType)
-        {
-            throw new NotImplementedException(); //TODO:
         }
 
         private bool Connect(ProductDbType dbType)
@@ -119,6 +104,7 @@ namespace DbInstallation.Database
             try
             {
                 _isConnectionDefined = databaseFunctions.TestConnection();
+                DatabaseFunctions = databaseFunctions;
                 return _isConnectionDefined;
             }
             catch (Exception ex)
@@ -147,6 +133,7 @@ namespace DbInstallation.Database
 
                 Console.WriteLine("Enter the Server name:");
                 string serverName = Console.ReadLine();
+
                 return new DatabaseProperties(dbUser, dbPassword, serverName, databaseName, isTrustedConnection);
             }
             else if(dbType == ProductDbType.Oracle)
@@ -154,12 +141,13 @@ namespace DbInstallation.Database
                 dbUser = RequestDatabaseUser();
                 dbPassword = RequestDatabasePassword();
 
+                Console.WriteLine("Enter the TNS connection string:");
+                string tnsOrServerConnection = Console.ReadLine();
                 Console.WriteLine("Enter data TABLESPACE:");
                 string tablespaceData = Console.ReadLine().ToUpper();
                 Console.WriteLine("Enter index TABLESPACE:");
                 string tablespaceIndex = Console.ReadLine().ToUpper();
-                Console.WriteLine("Enter the TNS connection string:");
-                string tnsOrServerConnection = Console.ReadLine();
+
                 return new DatabaseProperties(dbUser, dbPassword, tnsOrServerConnection, tablespaceData, tablespaceIndex);
             }
             else

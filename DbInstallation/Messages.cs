@@ -91,6 +91,14 @@ namespace DbInstallation
         /// Invalid Database type option.
         /// </summary>
         public static string ErrorMessage007 { get { return "Invalid Database type option."; } }
+
+        private static string _errorMessage008 { get { return "{0} is not a valid directory."; } }
+        /// <summary>
+        /// {0} is not a valid directory.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string ErrorMessage008(string path) => string.Format(_errorMessage008, path);
         #endregion Error messages
     }
 }

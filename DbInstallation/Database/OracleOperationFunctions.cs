@@ -1,9 +1,12 @@
 ﻿using DbInstallation.Interfaces;
+using DbInstallation.Util;
 using NLog;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Data;
+using System.IO;
 using static DbInstallation.Enums.EnumDbType;
+using static DbInstallation.Enums.EnumOperation;
 
 namespace DbInstallation.Database
 {
@@ -49,7 +52,23 @@ namespace DbInstallation.Database
 
         public bool Install()
         {
-            throw new NotImplementedException(); //TODO;
+            foreach (string folder in FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Install))
+            {
+                foreach(string file in FileHelper.ListFiles(folder))
+                {
+                    var content = File.ReadAllText("script.sql");
+                    using (var oracleConnection = new OracleConnection(ConnectionString))
+                    {
+                        oracleConnection.Open();
+                        using (var command = new OracleCommand(content) { Connection = oracleConnection })
+                        {
+                            command.CommandType = CommandType.Text;
+                            command.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+            return true;
         }
 
         public bool Update()
