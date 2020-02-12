@@ -99,6 +99,23 @@ namespace DbInstallation
         /// <param name="path"></param>
         /// <returns></returns>
         public static string ErrorMessage008(string path) => string.Format(_errorMessage008, path);
+
+        private static string _errorMessage009 { get { return "Database {0} is not empty. Found {1} objects."; } }
+        /// <summary>
+        /// Database {0} is not empty. Found {1} objects.
+        /// </summary>
+        /// <param name="databaseName"></param>
+        /// <param name="numObjects"></param>
+        /// <returns></returns>
+        public static string ErrorMessage009(string databaseName, decimal numObjects) => string.Format(_errorMessage009, databaseName, numObjects);
+
+        private static string _errorMessage010 { get { return @"Failed to execute sql command: " + Environment.NewLine + "{0}"; } }
+        /// <summary>
+        /// Failed to execute sql command: " + Environment.NewLine + "{0}
+        /// </summary>
+        /// <param name="sqlCommand"></param>
+        /// <returns></returns>
+        public static string ErrorMessage010(string sqlCommand) => string.Format(_errorMessage010, sqlCommand);
         #endregion Error messages
     }
 }

@@ -36,7 +36,7 @@ namespace DbInstallation.Database
                     string dbNameAndStatus = $@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns} : Database State: {oc.State}";
                     if (dt.Rows.Count == 0)
                     {
-                        Logger.Info(Messages.ErrorMessage002(dbNameAndStatus));
+                        Logger.Error(Messages.ErrorMessage002(dbNameAndStatus));
                         return false;
                     }
                     Logger.Info(Messages.Message001(dbNameAndStatus));
@@ -52,18 +52,21 @@ namespace DbInstallation.Database
 
         public bool Install()
         {
-            foreach (string folder in FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Install))
+            foreach (string sqlCmd in FileHelper.ListSqlCommands(ProductDbType.Oracle, OperationType.Install))
             {
-                foreach(string file in FileHelper.ListFiles(folder))
+                using (var oracleConnection = new OracleConnection(ConnectionString))
                 {
-                    var content = File.ReadAllText("script.sql");
-                    using (var oracleConnection = new OracleConnection(ConnectionString))
+                    oracleConnection.Open();
+                    using (var command = new OracleCommand(sqlCmd) { Connection = oracleConnection })
                     {
-                        oracleConnection.Open();
-                        using (var command = new OracleCommand(content) { Connection = oracleConnection })
+                        try
                         {
                             command.CommandType = CommandType.Text;
                             command.ExecuteNonQuery();
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, Messages.ErrorMessage010(sqlCmd));
                         }
                     }
                 }
@@ -103,6 +106,7 @@ namespace DbInstallation.Database
             try
             {
                 bool emptyDatabase = false;
+                decimal qtyObjects = 0;
                 using (OracleConnection oc = new OracleConnection(ConnectionString))
                 {
                     oc.Open();
@@ -115,12 +119,17 @@ namespace DbInstallation.Database
 
                     if (dt.Rows.Count == 1)
                     {
-                        emptyDatabase = dt.Rows[0].Field<decimal>(0) == 0;
+                        qtyObjects = dt.Rows[0].Field<decimal>(0);
+                        emptyDatabase = qtyObjects == 0;
                     }
                     else
                     {
                         throw new Exception(Messages.ErrorMessage003("USER_OBJECTS", $@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
                     }
+                }
+                if (!emptyDatabase) 
+                { 
+                    Logger.Error(Messages.ErrorMessage009($@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}", qtyObjects)); 
                 }
                 return emptyDatabase;
             }

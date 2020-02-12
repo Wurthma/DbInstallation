@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using static DbInstallation.Enums.EnumDbType;
 using static DbInstallation.Enums.EnumOperation;
 
@@ -83,7 +84,7 @@ namespace DbInstallation.Util
                 throw new Exception(Messages.ErrorMessage005);
         }
 
-        public static List<string> ListFolders(ProductDbType dbType, OperationType operationType)
+        private static List<string> ListFolders(ProductDbType dbType, OperationType operationType)
         {
             if (dbType == ProductDbType.Oracle)
             {
@@ -106,7 +107,7 @@ namespace DbInstallation.Util
         }
 
 
-        public static List<string> ListFiles(string path)
+        private static List<string> ListFiles(string path)
         {
             if (Directory.Exists(path))
             {
@@ -117,6 +118,25 @@ namespace DbInstallation.Util
                 Logger.Error(Messages.ErrorMessage008(path));
                 return new List<string>();
             }
+        }
+
+
+        public static List<string> ListSqlCommands(ProductDbType dbType, OperationType operationType)
+        {
+            List<string> sqlCommandList = new List<string>();
+            foreach (string folder in ListFolders(dbType, operationType))
+            {
+                foreach (string file in ListFiles(folder))
+                {
+                    var content = File.ReadAllText(file);
+                    MatchCollection matchCollection = new Regex(@"(?<cmd>[\s\S.]+?)\s;\s").Matches(content);
+                    foreach (Match match in matchCollection)
+                    {
+                        sqlCommandList.Add(match.Groups["cmd"].Value);
+                    }
+                }
+            }
+            return sqlCommandList;
         }
     }
 }
