@@ -129,7 +129,7 @@ namespace DbInstallation.Util
                 foreach (string file in ListFiles(folder))
                 {
                     var content = File.ReadAllText(file);
-                    MatchCollection matchCollection = new Regex(@"(?<cmd>[\s\S.]+?)\s;\s").Matches(content);
+                    MatchCollection matchCollection = new Regex(@"(?<cmd>[\s\S.]+?)\s?;").Matches(content);
                     foreach (Match match in matchCollection)
                     {
                         sqlCommandList.Add(match.Groups["cmd"].Value);
