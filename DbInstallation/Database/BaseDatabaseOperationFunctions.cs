@@ -14,6 +14,5 @@
         public DatabaseProperties DatabaseProperties { get; private set; }
 
         protected void SetConnectionString(string connectionString) => ConnectionString = connectionString;
-
     }
 }

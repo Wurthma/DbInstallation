@@ -1,8 +1,7 @@
 ﻿using DbInstallation.Database;
+using DbInstallation.Enums;
 using NLog;
 using System;
-using static DbInstallation.Enums.EnumDbType;
-using static DbInstallation.Enums.EnumOperation;
 
 namespace DbInstallation
 {

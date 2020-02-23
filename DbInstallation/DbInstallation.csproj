@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <Folder Include="Database\SqlScript\Oracle\Install\Carga\" />
-    <Folder Include="Database\SqlScript\Oracle\Install\Custom\" />
     <Folder Include="Database\SqlScript\Oracle\Install\Functions\" />
     <Folder Include="Database\SqlScript\Oracle\Install\Package\" />
     <Folder Include="Database\SqlScript\Oracle\Install\Platypus\" />
@@ -40,7 +39,6 @@
     <Folder Include="Database\SqlScript\Oracle\Install\Trigger\" />
     <Folder Include="Database\SqlScript\Oracle\Update\93\Carga\" />
     <Folder Include="Database\SqlScript\Oracle\Update\93\Constraints\" />
-    <Folder Include="Database\SqlScript\Oracle\Update\93\Custom\" />
     <Folder Include="Database\SqlScript\Oracle\Update\93\Functions\" />
     <Folder Include="Database\SqlScript\Oracle\Update\93\Package\" />
     <Folder Include="Database\SqlScript\Oracle\Update\93\Platypus\" />
@@ -51,7 +49,6 @@
     <Folder Include="Database\SqlScript\Oracle\Update\93\View\" />
     <Folder Include="Database\SqlScript\SqlServer\Install\Carga\" />
     <Folder Include="Database\SqlScript\SqlServer\Install\Constraints\" />
-    <Folder Include="Database\SqlScript\SqlServer\Install\Custom\" />
     <Folder Include="Database\SqlScript\SqlServer\Install\Functions\" />
     <Folder Include="Database\SqlScript\SqlServer\Install\Package\" />
     <Folder Include="Database\SqlScript\SqlServer\Install\Platypus\" />
@@ -61,7 +58,6 @@
     <Folder Include="Database\SqlScript\SqlServer\Install\View\" />
     <Folder Include="Database\SqlScript\SqlServer\Update\93\Carga\" />
     <Folder Include="Database\SqlScript\SqlServer\Update\93\Constraints\" />
-    <Folder Include="Database\SqlScript\SqlServer\Update\93\Custom\" />
     <Folder Include="Database\SqlScript\SqlServer\Update\93\Functions\" />
     <Folder Include="Database\SqlScript\SqlServer\Update\93\Package\" />
     <Folder Include="Database\SqlScript\SqlServer\Update\93\Platypus\" />

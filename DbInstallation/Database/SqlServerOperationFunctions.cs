@@ -1,8 +1,8 @@
-﻿using DbInstallation.Interfaces;
+﻿using DbInstallation.Enums;
+using DbInstallation.Interfaces;
 using NLog;
 using System;
 using System.Data.SqlClient;
-using static DbInstallation.Enums.EnumDbType;
 
 namespace DbInstallation.Database
 {

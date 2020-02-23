@@ -1,18 +1,26 @@
-﻿using DbInstallation.Interfaces;
+﻿using DbInstallation.Enums;
+using DbInstallation.Interfaces;
 using DbInstallation.Util;
 using NLog;
 using Oracle.ManagedDataAccess.Client;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using static DbInstallation.Enums.EnumDbType;
-using static DbInstallation.Enums.EnumOperation;
 
 namespace DbInstallation.Database
 {
     public class OracleOperationFunctions : BaseDatabaseOperationFunctions, IDatabaseFunctions
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger IntegrityLogger = LogManager.GetLogger("integrityLogger");
+
+        private class DatabaseObjectIntegrity
+        {
+            public string Type { get; set; }
+            public string Name { get; set; }
+            public string NonconformityType { get; set; }
+        }
 
         public OracleOperationFunctions(DatabaseProperties databaseProperties)
             : base(databaseProperties)
@@ -52,25 +60,40 @@ namespace DbInstallation.Database
 
         public bool Install()
         {
-            foreach (string sqlCmd in FileHelper.ListSqlCommands(ProductDbType.Oracle, OperationType.Install))
+            List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Install);
+
+            using (var oracleConnection = new OracleConnection(ConnectionString))
             {
-                using (var oracleConnection = new OracleConnection(ConnectionString))
+                oracleConnection.Open();
+                using (var command = new OracleCommand() { Connection = oracleConnection })
                 {
-                    oracleConnection.Open();
-                    using (var command = new OracleCommand(sqlCmd) { Connection = oracleConnection })
+                    string sqlCmdAux = string.Empty;
+                    try
                     {
-                        try
+                        foreach(string folder in folderList)
                         {
-                            command.CommandType = CommandType.Text;
-                            command.ExecuteNonQuery();
+                            foreach (string file in FileHelper.ListFiles(folder))
+                            {
+                                Logger.Info(Messages.Message007(Path.GetFileName(folder), Path.GetFileName(file)));
+                                foreach (string sqlCmd in FileHelper.ListSqlCommandsFromFile(file))
+                                {
+                                    sqlCmdAux = command.CommandText = ReplaceDatabaseProperties(sqlCmd);
+                                    command.CommandType = CommandType.Text;
+                                    command.ExecuteNonQuery();
+                                }
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            Logger.Error(ex, Messages.ErrorMessage010(sqlCmd));
-                        }
+                        Console.WriteLine(Environment.NewLine);
+                        Logger.Info(Messages.Message008);
+                        ValidateDatabaseInstallation();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
                     }
                 }
             }
+
             return true;
         }
 
@@ -78,6 +101,143 @@ namespace DbInstallation.Database
         {
             throw new NotImplementedException(); //TODO;
         }
+
+        private void ValidateDatabaseInstallation()
+        {
+            Logger.Info(Messages.Message009);
+            CompileObjects();
+            CompileObjects();
+            LoadDatabaseIntegrityHash();
+        }
+
+        private void CompileObjects()
+        {
+            using (var oracleConnection = new OracleConnection(ConnectionString))
+            {
+                oracleConnection.Open();
+                using (var command = new OracleCommand() { Connection = oracleConnection })
+                {
+                    string sqlCmdAux = string.Empty;
+                    try
+                    {
+                        command.CommandText = "PRC_COMPILA_OBJETO";
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                    }
+                }
+            }
+        }
+
+        private bool LoadDatabaseIntegrityHash()
+        {
+            using (var oracleConnection = new OracleConnection(ConnectionString))
+            {
+                oracleConnection.Open();
+                using (var command = new OracleCommand() { Connection = oracleConnection })
+                {
+                    string sqlCmdAux = string.Empty;
+                    try
+                    {
+                        command.CommandText = "PRC_CMP_CARREGA_INTEGRID_HASH";
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.Add("pi_s_schema_owner", OracleDbType.Varchar2, ParameterDirection.Input).Value = DatabaseProperties.DatabaseUser;
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                    }
+                }
+            }
+            return GenerateIntegrityLog();
+        }
+
+        private bool GenerateIntegrityLog()
+        {
+            List<DatabaseObjectIntegrity> listDatabaseObjectIntegrity = GetDatabaseIntegrityResult();
+
+            foreach(var objectIntegrity in listDatabaseObjectIntegrity)
+            {
+                IntegrityLogger.Warn(Messages.ErrorMessage013(listDatabaseObjectIntegrity.Count));
+                IntegrityLogger.Warn(Messages.ErrorMessage012(
+                    objectIntegrity.Name,
+                    objectIntegrity.Type,
+                    objectIntegrity.NonconformityType)
+                );
+            }
+
+            if(listDatabaseObjectIntegrity.Count == 0)
+            {
+                IntegrityLogger.Info(Messages.Message010);
+                return true;
+            }
+
+            return false;
+        }
+
+        private List<DatabaseObjectIntegrity> GetDatabaseIntegrityResult()
+        {
+            List<DatabaseObjectIntegrity> listDatabaseObjectIntegrity = new List<DatabaseObjectIntegrity>();
+
+            string sqlQuery = @"SELECT s_tipo_objeto, s_nome_objeto, s_tipo_inconformidade
+                            FROM cmp_verific_integridade_obj
+                            WHERE id_verificacao =
+                                (SELECT MAX(id_verificacao) FROM cmp_verific_integridade vi)
+                            ORDER BY s_tipo_objeto, s_tipo_inconformidade ";
+
+            try
+            {
+                using (OracleConnection oracleConnection = new OracleConnection(ConnectionString))
+                {
+                    using (var command = new OracleCommand() { Connection = oracleConnection })
+                    {
+                        string sqlCmdAux = string.Empty;
+                        try
+                        {
+                            oracleConnection.Open();
+                            command.CommandText = sqlQuery;
+                            command.CommandType = CommandType.Text;
+                            OracleDataReader dataReader = command.ExecuteReader();
+
+                            while (dataReader.Read())
+                            {
+                                DatabaseObjectIntegrity databaseObjectIntegrity = new DatabaseObjectIntegrity()
+                                {
+                                    Type = dataReader.GetString("s_tipo_objeto"),
+                                    Name = dataReader.GetString("s_nome_objeto"),
+                                    NonconformityType = dataReader.GetString("s_tipo_inconformidade")
+                                };
+                                listDatabaseObjectIntegrity.Add(databaseObjectIntegrity);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, Messages.ErrorMessage011);
+                        }
+                    }
+                }
+                return listDatabaseObjectIntegrity;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, ex.Message);
+                return listDatabaseObjectIntegrity;
+            }
+        }
+
+        private string ReplaceDatabaseProperties(string sqlCommand) => 
+            sqlCommand.Replace("'&OWNBFW'", "'&OWN'")
+            .Replace("&OWNBFW..", "&OWN.")
+            .Replace("&OWN..", "&OWN.")
+            .Replace("&OWN", DatabaseProperties.DatabaseUser)
+            .Replace("&&TD", "&TD")
+            .Replace("&TD", DatabaseProperties.TablespaceData)
+            .Replace("&&TI", "&TI")
+            .Replace("&TI", DatabaseProperties.TablespaceIndex);
 
         private bool ValidateDatabase() 
         {

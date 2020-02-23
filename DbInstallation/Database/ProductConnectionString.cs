@@ -1,4 +1,4 @@
-﻿using static DbInstallation.Enums.EnumDbType;
+﻿using DbInstallation.Enums;
 
 namespace DbInstallation.Database
 {

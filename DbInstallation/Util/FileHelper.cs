@@ -1,4 +1,5 @@
 ﻿using DbInstallation.Database;
+using DbInstallation.Enums;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -6,8 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using static DbInstallation.Enums.EnumDbType;
-using static DbInstallation.Enums.EnumOperation;
 
 namespace DbInstallation.Util
 {
@@ -39,7 +38,6 @@ namespace DbInstallation.Util
                 dict.Add(7, @"\Trigger");
                 dict.Add(8, @"\View");
                 dict.Add(9, @"\Carga");
-                dict.Add(10, @"\Custom");
                 return dict;
             } 
         }
@@ -56,7 +54,6 @@ namespace DbInstallation.Util
                 dict.Add(5, @"\Trigger");
                 dict.Add(6, @"\View");
                 dict.Add(7, @"\Carga");
-                dict.Add(8, @"\Custom");
                 return dict;
             } 
         }
@@ -84,7 +81,7 @@ namespace DbInstallation.Util
                 throw new Exception(Messages.ErrorMessage005);
         }
 
-        private static List<string> ListFolders(ProductDbType dbType, OperationType operationType)
+        public static List<string> ListFolders(ProductDbType dbType, OperationType operationType)
         {
             if (dbType == ProductDbType.Oracle)
             {
@@ -107,7 +104,7 @@ namespace DbInstallation.Util
         }
 
 
-        private static List<string> ListFiles(string path)
+        public static List<string> ListFiles(string path)
         {
             if (Directory.Exists(path))
             {
@@ -115,28 +112,68 @@ namespace DbInstallation.Util
             }
             else
             {
-                Logger.Error(Messages.ErrorMessage008(path));
+                Logger.Warn(Messages.ErrorMessage008(path));
                 return new List<string>();
             }
         }
 
-
-        public static List<string> ListSqlCommands(ProductDbType dbType, OperationType operationType)
+        public static List<string> ListSqlCommandsFromFile(string filePath)
         {
             List<string> sqlCommandList = new List<string>();
-            foreach (string folder in ListFolders(dbType, operationType))
+            Regex regex = GetRegexPattern(filePath);
+            var content = File.ReadAllText(filePath) + Environment.NewLine; //Adiciona nova linha ao final do conteúdo para o funcionamento correto do regex
+            MatchCollection matchCollection = regex.Matches(content);
+
+            foreach (Match match in matchCollection)
             {
-                foreach (string file in ListFiles(folder))
+                string sqlCommand = match.Groups["cmd"].Value.Trim();
+                if (!IsComment(sqlCommand))
                 {
-                    var content = File.ReadAllText(file);
-                    MatchCollection matchCollection = new Regex(@"(?<cmd>[\s\S.]+?)\s?;").Matches(content);
-                    foreach (Match match in matchCollection)
-                    {
-                        sqlCommandList.Add(match.Groups["cmd"].Value);
-                    }
+                    sqlCommandList.Add(sqlCommand);
                 }
             }
             return sqlCommandList;
+        }
+
+        private static Regex GetRegexPattern(string file)
+        {
+            Regex regex = new Regex(@"(?<cmd>[\s\S.]+?);\s*[\n\r]");
+            if (IsPlSqlCommand(file))
+            {
+                regex = new Regex(@"(?<cmd>[^\s\/][\s\S.]+?;)\s*\/");
+            }
+            else if (IsPlSqlFunctionProceduresPackageTriggerView(file))
+            {
+                regex = new Regex(@"(?<cmd>[\s\S.]+?;)\s*\/[\n\r]");
+            }
+            return regex;
+        }
+
+        private static bool IsPlSqlCommand(string file) => 
+            file.ToUpper().Contains(@"0-PLATYPUS") || 
+            (file.ToUpper().Contains(@"2-BFW") && file.ToUpper().Contains(@"ESTRUTURA"));
+
+        private static bool IsPlSqlFunctionProceduresPackageTriggerView(string file) => 
+            file.ToUpper().Contains(@"\FUNCTIONS\") ||
+            file.ToUpper().Contains(@"\PROCEDURE\") ||
+            file.ToUpper().Contains(@"\PACKAGE\") ||
+            file.ToUpper().Contains(@"\TRIGGER\") ||
+            file.ToUpper().Contains(@"\VIEW\");
+
+        private static bool IsComment(string sqlCommand)
+        {
+            string fullCommand = string.Empty;
+            if (sqlCommand.StartsWith("--"))
+            {
+                Regex regex = new Regex(@"--.+(?<cmd>[\s\S.]*)");
+                MatchCollection matchCollection = regex.Matches(sqlCommand);
+                foreach (Match match in matchCollection)
+                {
+                    fullCommand += match.Groups["cmd"].Value.Trim();
+                }
+                return string.IsNullOrEmpty(fullCommand);
+            }
+            return false;
         }
     }
 }
