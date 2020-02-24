@@ -71,10 +71,7 @@ namespace DbInstallation.Database
             {
                 if (operationType == OperationType.Install)
                 {
-                    if (DatabaseFunctions.CheckEmptyDatabase())
-                    {
-                        DatabaseFunctions.Install();
-                    }
+                    DatabaseFunctions.Install();
                 }
                 else if (operationType == OperationType.Update)
                 {

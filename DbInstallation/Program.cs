@@ -1,30 +1,45 @@
 ﻿using DbInstallation.Database;
 using DbInstallation.Enums;
-using Microsoft.Extensions.Configuration;
+using DbInstallation.Util;
 using NLog;
 using System;
-using System.IO;
 
 namespace DbInstallation
 {
     class Program
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger othersLogger = LogManager.GetLogger("othersLog");
 
         static void Main(string[] args)
         {
             try
             {
-                IConfiguration configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", true, true)
-                .Build();
-
+                if(args.Length > 0)
+                {
+                    ExecuteArguments(args);
+                    return;
+                }
                 SelectDatabase(new ProductDatabase());
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+            }
+        }
+
+        private static void ExecuteArguments(string[] args)
+        {
+            if (args.Length > 0)
+            {
+                if (args[0] == "-newupdt")
+                {
+                    if (!FileHelper.CreateNextUpdateFolders())
+                    {
+                        othersLogger.Error(Messages.ErrorMessage020);
+                    }
+                }
+                return;
             }
         }
 

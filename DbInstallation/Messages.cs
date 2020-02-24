@@ -73,6 +73,32 @@ namespace DbInstallation
         /// </summary>
         public static string Message010 { get { return @"SUCCESS: NO INTEGRITY FAILURE FOUND!"; } }
 
+        private static string _message011 { get { return @"Current Version of database {0}/{1} is: {2}."; } }
+        /// <summary>
+        /// Current Version of database {0}/{1} is: {2}.
+        /// </summary>
+        /// <param name="databaseUser"></param>
+        /// <param name="tnsOrServerConnection"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static string Message011(string databaseUser, string tnsOrServerConnection, int version) => string.Format(_message011, databaseUser, tnsOrServerConnection, version);
+
+        private static string _message012 { get { return @"Update folder structure 'Update\{0}' created for Oracle and Sql Server."; } }
+        /// <summary>
+        /// Update folder structure 'Update\{0}' created for Oracle and Sql Server.
+        /// </summary>
+        /// <param name="versionFolderCreated"></param>
+        /// <returns></returns>
+        public static string Message012(int versionFolderCreated) => string.Format(_message012, versionFolderCreated);
+
+        private static string _message013 { get { return @"Directory {0} sussecefully created!"; } }
+        /// <summary>
+        /// Directory {0} sussecefully created!
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <returns></returns>
+        public static string Message013(string folder) => string.Format(_message013, folder);
+
         #endregion Info messages
 
         #region Error messages
@@ -171,9 +197,48 @@ namespace DbInstallation
         public static string ErrorMessage014 { get { return @"An update operation was selected but the parameters to update the database was not set."; } }
 
         /// <summary>
-        /// 
+        /// No version was found to database. Please, check if database connection is right and if the application was installed.
         /// </summary>
         public static string ErrorMessage015 { get { return @"No version was found to database. Please, check if database connection is right and if the application was installed."; } }
+
+        private static string _errorMessage016 { get { return @"The database can't be updated to version {0}. The current version is already {1}."; } }
+        /// <summary>
+        /// The database can't be updated to version {0}. The current version is already {1}.
+        /// </summary>
+        /// <param name="versionToUpdate"></param>
+        /// <param name="currentVersion"></param>
+        /// <returns></returns>
+        public static string ErrorMessage016(int versionToUpdate, int currentVersion) => string.Format(_errorMessage016, versionToUpdate, currentVersion);
+
+        private static string _errorMessage017 { get { return @"Format name {0} is not valid for directory 'Update'. Folders in directory 'Update' must be sequencial and numeric."; } }
+        /// <summary>
+        /// Format name {0} is not valid for directory 'Update'. Folders in directory 'Update' must be sequencial and numeric.
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <returns></returns>
+        public static string ErrorMessage017(string folder) => string.Format(_errorMessage017, folder);
+
+        private static string _errorMessage018 { get { return @"Action aborterd: Update folder is different for Oracle (current {0}) and Sql Server (current {1})."; } }
+        /// <summary>
+        /// Action aborterd: Update folder is different for Oracle (current {0}) and Sql Server (current {1}).
+        /// </summary>
+        /// <param name="oracleVersion"></param>
+        /// <param name="sqlServerVersion"></param>
+        /// <returns></returns>
+        public static string ErrorMessage018(int oracleVersion, int sqlServerVersion) => string.Format(_errorMessage018, oracleVersion, sqlServerVersion);
+
+        private static string _errorMessage019 { get { return @"An error occurred while trying to create folder {0}."; } }
+        /// <summary>
+        /// An error occurred while trying to create folder {0}.
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <returns></returns>
+        public static string ErrorMessage019(string folder) => string.Format(_errorMessage019, folder);
+
+        /// <summary>
+        /// An error occurred while trying to execute this action.
+        /// </summary>
+        public static string ErrorMessage020 { get { return @"An error occurred while trying to execute this action."; } }
 
         #endregion Error messages
     }

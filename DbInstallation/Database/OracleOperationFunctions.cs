@@ -63,45 +63,34 @@ namespace DbInstallation.Database
         {
             List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Install);
 
-            using (var oracleConnection = new OracleConnection(ConnectionString))
+            if (!CheckEmptyDatabase())
             {
-                oracleConnection.Open();
-                using (var command = new OracleCommand() { Connection = oracleConnection })
-                {
-                    string sqlCmdAux = string.Empty;
-                    try
-                    {
-                        foreach(string folder in folderList)
-                        {
-                            foreach (string file in FileHelper.ListFiles(folder))
-                            {
-                                Logger.Info(Messages.Message007(Path.GetFileName(folder), Path.GetFileName(file)));
-                                foreach (string sqlCmd in FileHelper.ListSqlCommandsFromFile(file))
-                                {
-                                    sqlCmdAux = command.CommandText = ReplaceDatabaseProperties(sqlCmd);
-                                    command.CommandType = CommandType.Text;
-                                    command.ExecuteNonQuery();
-                                }
-                            }
-                        }
-                        Console.WriteLine(Environment.NewLine);
-                        Logger.Info(Messages.Message008);
-                        ValidateDatabaseInstallation();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
-                    }
-                }
+                return false;
             }
 
-            return true;
+            return ExecuteDatabaseCommands(folderList);
         }
 
         public bool Update(int version)
         {
-            List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Update, GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription")), version);
+            int currentVersion = GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription"));
+            List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Update, currentVersion, version);
+            
+            Console.WriteLine(Environment.NewLine);
+            Logger.Info(Messages.Message011(DatabaseProperties.DatabaseUser, DatabaseProperties.ServerOrTns, currentVersion));
+            Console.WriteLine(Environment.NewLine);
 
+            if(currentVersion <= version)
+            {
+                Logger.Error(Messages.ErrorMessage016(version, currentVersion));
+                return false;
+            }
+
+            return ExecuteDatabaseCommands(folderList);
+        }
+
+        private bool ExecuteDatabaseCommands(List<string> folderList)
+        {
             using (var oracleConnection = new OracleConnection(ConnectionString))
             {
                 oracleConnection.Open();
@@ -133,7 +122,6 @@ namespace DbInstallation.Database
                     }
                 }
             }
-
             return true;
         }
 

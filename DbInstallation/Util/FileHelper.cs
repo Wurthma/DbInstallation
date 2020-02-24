@@ -13,6 +13,7 @@ namespace DbInstallation.Util
     public static class FileHelper
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger othersLogger = LogManager.GetLogger("othersLog");
 
         private static string SqlScriptsFolder { get => @"\Database\SqlScript"; }
         
@@ -58,8 +59,11 @@ namespace DbInstallation.Util
             } 
         }
 
-        private static string GetScriptsPath(ProductDbType dbType, OperationType operationType, int? version = null) => 
-            Path.GetDirectoryName(new Uri(Assembly.GetAssembly(typeof(ProductDatabase)).CodeBase).LocalPath) + SqlScriptsFolder + GetDbFolder(dbType) + GetOperationFolder(operationType, version);
+        private static string GetBaseFolder(ProductDbType dbType) =>
+            Path.GetDirectoryName(new Uri(Assembly.GetAssembly(typeof(ProductDatabase)).CodeBase).LocalPath) + SqlScriptsFolder + GetDbFolder(dbType);
+
+        private static string GetScriptsPath(ProductDbType dbType, OperationType operationType, int? version = null) =>
+            GetBaseFolder(dbType) + GetOperationFolder(operationType, version);
 
         private static string GetDbFolder(ProductDbType dbType)
         {
@@ -87,6 +91,101 @@ namespace DbInstallation.Util
             }
             else
                 throw new Exception(Messages.ErrorMessage005);
+        }
+
+        public static bool CreateNextUpdateFolders()
+        {
+            int nextUpdateFolder = GetNextUpdateFolder();
+            try
+            {
+                string oracleNextUpdateFolder = GetBaseFolder(ProductDbType.Oracle) + UpdateFolder + "\\" + nextUpdateFolder;
+                string sqlServerNextUpdateFolder = GetBaseFolder(ProductDbType.SqlServer) + UpdateFolder + "\\" + nextUpdateFolder;
+
+                DirectoryInfo createdFolderOracle = Directory.CreateDirectory(oracleNextUpdateFolder);
+                DirectoryInfo createdFolderSqlServer = Directory.CreateDirectory(sqlServerNextUpdateFolder);
+
+                if (Directory.Exists(oracleNextUpdateFolder) && Directory.Exists(sqlServerNextUpdateFolder))
+                {
+                    othersLogger.Info(Messages.Message012(nextUpdateFolder));
+
+                    bool createListFolders =
+                        CreateFolders(createdFolderOracle.FullName, OracleListFolder.Values.ToList()) &&
+                        CreateFolders(createdFolderSqlServer.FullName, SqlServerListFolder.Values.ToList());
+
+                    return createListFolders;
+                }
+                othersLogger.Error(Messages.ErrorMessage019($@"Update\{nextUpdateFolder}"));
+                return false;
+            }
+            catch (Exception ex)
+            {
+                othersLogger.Error(ex, ex.Message);
+                throw;
+            }
+        }
+
+        private static bool CreateFolders(string createInPath, List<string> listFolderToCreate)
+        {
+            bool foldersCreated = true;
+            foreach (var folder in listFolderToCreate)
+            {
+                DirectoryInfo createdFolder = Directory.CreateDirectory(createInPath + folder);
+                if (createdFolder.Exists)
+                {
+                    othersLogger.Info(Messages.Message013(createdFolder.FullName));
+                }
+                else
+                {
+                    othersLogger.Error(Messages.ErrorMessage019(createdFolder.FullName));
+                    foldersCreated = false;
+                }
+            }
+            return foldersCreated;
+        }
+
+        private static int GetNextUpdateFolder()
+        {
+            var oracleDirectoryList = Directory.GetDirectories(
+                GetBaseFolder(ProductDbType.Oracle) + UpdateFolder, "*", SearchOption.TopDirectoryOnly)
+                .ToList();
+
+            var sqlServerDirectoryList = Directory.GetDirectories(
+                GetBaseFolder(ProductDbType.SqlServer) + UpdateFolder, "*", SearchOption.TopDirectoryOnly)
+                .ToList();
+
+            int oracleMaxVersion = GetCurrentUpdateFolder(oracleDirectoryList);
+            int sqlServerMaxVersion = GetCurrentUpdateFolder(sqlServerDirectoryList);
+
+            if(oracleMaxVersion == sqlServerMaxVersion)
+            {
+                return oracleMaxVersion+1;
+            }
+            else
+            {
+                throw new DirectoryNotFoundException(Messages.ErrorMessage018(oracleMaxVersion, sqlServerMaxVersion));
+            }
+        }
+
+        private static int GetCurrentUpdateFolder(List<string> directoryList)
+        {           
+            int maxVersion = 0;
+
+            foreach (var folderVersion in directoryList)
+            {
+                if(int.TryParse(Path.GetFileName(folderVersion), out int version))
+                {
+                    if (maxVersion < version)
+                    {
+                        maxVersion = version;
+                    }
+                }
+                else
+                {
+                    Logger.Warn(Messages.ErrorMessage017(folderVersion));
+                }
+                
+            }
+            return maxVersion;
         }
 
         public static List<string> ListFolders(ProductDbType dbType, OperationType operationType, int? currentVersion = null, int? updateVersion = null)
