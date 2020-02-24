@@ -13,7 +13,8 @@ namespace DbInstallation.Database
     public class OracleOperationFunctions : BaseDatabaseOperationFunctions, IDatabaseFunctions
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        private static readonly Logger IntegrityLogger = LogManager.GetLogger("integrityLogger");
+        private static readonly Logger IntegrityLogger = LogManager.GetLogger("integrity");
+        private static readonly Logger integrityNlsParametersLogger = LogManager.GetLogger("integrityNlsParameters");
 
         private class DatabaseObjectIntegrity
         {
@@ -97,14 +98,49 @@ namespace DbInstallation.Database
             return true;
         }
 
-        public bool Update()
+        public bool Update(int version)
         {
-            throw new NotImplementedException(); //TODO;
+            List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Update, GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription")), version);
+
+            using (var oracleConnection = new OracleConnection(ConnectionString))
+            {
+                oracleConnection.Open();
+                using (var command = new OracleCommand() { Connection = oracleConnection })
+                {
+                    string sqlCmdAux = string.Empty;
+                    try
+                    {
+                        foreach (string folder in folderList)
+                        {
+                            foreach (string file in FileHelper.ListFiles(folder))
+                            {
+                                Logger.Info(Messages.Message007(Path.GetFileName(folder), Path.GetFileName(file)));
+                                foreach (string sqlCmd in FileHelper.ListSqlCommandsFromFile(file))
+                                {
+                                    sqlCmdAux = command.CommandText = ReplaceDatabaseProperties(sqlCmd);
+                                    command.CommandType = CommandType.Text;
+                                    command.ExecuteNonQuery();
+                                }
+                            }
+                        }
+                        Console.WriteLine(Environment.NewLine);
+                        Logger.Info(Messages.Message008);
+                        ValidateDatabaseInstallation();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                    }
+                }
+            }
+
+            return true;
         }
 
         private void ValidateDatabaseInstallation()
         {
             Logger.Info(Messages.Message009);
+            LogNlsCharacterSetParameters();
             CompileObjects();
             CompileObjects();
             LoadDatabaseIntegrityHash();
@@ -195,7 +231,6 @@ namespace DbInstallation.Database
                 {
                     using (var command = new OracleCommand() { Connection = oracleConnection })
                     {
-                        string sqlCmdAux = string.Empty;
                         try
                         {
                             oracleConnection.Open();
@@ -229,6 +264,100 @@ namespace DbInstallation.Database
             }
         }
 
+        private void LogNlsCharacterSetParameters()
+        {
+            Dictionary<string, string> nlsDatabaseParameters = GetNlsCharacterSetParameters();
+
+            foreach(var item in nlsDatabaseParameters)
+            {
+                integrityNlsParametersLogger.Info($@"PARAMETER: {item.Key} | VALUE: {item.Value}");
+            }
+        }
+
+        private Dictionary<string, string> GetNlsCharacterSetParameters()
+        {
+            Dictionary<string, string> nlsDatabaseParameters = new Dictionary<string, string>();
+            string sqlQuery = @"SELECT * FROM NLS_DATABASE_PARAMETERS ";
+
+            try
+            {
+                using (OracleConnection oracleConnection = new OracleConnection(ConnectionString))
+                {
+                    using (var command = new OracleCommand(sqlQuery, oracleConnection))
+                    {
+                        try
+                        {
+                            oracleConnection.Open();
+                            command.CommandType = CommandType.Text;
+                            OracleDataReader dataReader = command.ExecuteReader();
+
+                            while (dataReader.Read())
+                            {
+                                nlsDatabaseParameters.Add(dataReader.GetString("PARAMETER"), dataReader.GetString("VALUE"));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, Messages.ErrorMessage011);
+                        }
+                    }
+                }
+                return nlsDatabaseParameters;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, ex.Message);
+                return nlsDatabaseParameters;
+            }
+        }
+
+        private int GetDatabaseCurrentVersion(string projectDescription)
+        {
+            string sqlQuery = @"SELECT MAX(COD_VERSAO_BANCO) FROM TBFR_VERSAO_BANCO WHERE DES_PROJETO = :projectDescription ";
+
+            try
+            {
+                using (OracleConnection oracleConnection = new OracleConnection(ConnectionString))
+                {
+                    using (var command = new OracleCommand(sqlQuery, oracleConnection))
+                    {
+                        oracleConnection.Open();
+                        command.CommandType = CommandType.Text;
+                        command.Parameters.Add("projectDescription", OracleDbType.Varchar2).Value = projectDescription;
+                        OracleDataReader dataReader = command.ExecuteReader();
+
+                        if (dataReader.Read())
+                        {
+                            return dataReader.GetInt32(0);
+                        }
+                        throw new Exception(Messages.ErrorMessage015);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        private void InsertDatabaseVersion(int databaseVersion, string descricaoProjeto)
+        {
+            string sqlQuery = @"INSERT INTO TBFR_VERSAO_BANCO (COD_VERSAO_BANCO, DAT_VERSAO, QTD_BLOCO, DES_PROJETO) VALUES (:version, :dateVersion, 0, :projectDescription) ";
+
+            using (OracleConnection oracleConnection = new OracleConnection(ConnectionString))
+            {
+                using (var command = new OracleCommand(sqlQuery, oracleConnection))
+                {
+                    oracleConnection.Open();
+                    command.CommandType = CommandType.Text;
+                    command.Parameters.Add("version", OracleDbType.Int32).Value = databaseVersion;
+                    command.Parameters.Add("dateVersion", OracleDbType.Date).Value = DateTime.Now;
+                    command.Parameters.Add("projectDescription", OracleDbType.Varchar2).Value = descricaoProjeto;
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
         private string ReplaceDatabaseProperties(string sqlCommand) => 
             sqlCommand.Replace("'&OWNBFW'", "'&OWN'")
             .Replace("&OWNBFW..", "&OWN.")
@@ -244,8 +373,8 @@ namespace DbInstallation.Database
             Console.WriteLine(Environment.NewLine);
             Console.WriteLine(Messages.Message002);
             Console.WriteLine(Environment.NewLine);
-            bool isOk = CheckEmptyDatabase() && 
-                        ValidateDatabaseUser() && 
+
+            bool isOk = ValidateDatabaseUser() && 
                         ValidateTableSpace(DatabaseProperties.TablespaceData) && 
                         ValidateTableSpace(DatabaseProperties.TablespaceIndex) && 
                         ValidateDbmsCryptoAccess();
@@ -261,7 +390,7 @@ namespace DbInstallation.Database
             return isOk;
         }
 
-        private bool CheckEmptyDatabase()
+        public bool CheckEmptyDatabase()
         {
             try
             {
@@ -390,6 +519,11 @@ namespace DbInstallation.Database
                 Logger.Error(ex, ex.Message);
                 return false;
             }
+        }
+
+        public bool ValidateUpdateVersion()
+        {
+            throw new NotImplementedException();
         }
     }
 }

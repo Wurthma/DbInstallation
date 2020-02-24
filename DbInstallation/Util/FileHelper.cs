@@ -58,8 +58,8 @@ namespace DbInstallation.Util
             } 
         }
 
-        private static string GetScriptsPath(ProductDbType dbType, OperationType operationType) => 
-            Path.GetDirectoryName(new Uri(Assembly.GetAssembly(typeof(ProductDatabase)).CodeBase).LocalPath) + SqlScriptsFolder + GetDbFolder(dbType) + GetOperationFolder(operationType);
+        private static string GetScriptsPath(ProductDbType dbType, OperationType operationType, int? version = null) => 
+            Path.GetDirectoryName(new Uri(Assembly.GetAssembly(typeof(ProductDatabase)).CodeBase).LocalPath) + SqlScriptsFolder + GetDbFolder(dbType) + GetOperationFolder(operationType, version);
 
         private static string GetDbFolder(ProductDbType dbType)
         {
@@ -71,36 +71,77 @@ namespace DbInstallation.Util
                 throw new Exception(Messages.ErrorMessage006);
         }
 
-        private static string GetOperationFolder(OperationType operationType)
+        private static string GetOperationFolder(OperationType operationType, int? version = null)
         {
             if (operationType == OperationType.Install)
+            {
                 return InstallFolder;
+            }
             else if (operationType == OperationType.Update)
-                return UpdateFolder;
+            {
+                if(version != null)
+                {
+                    return $@"{UpdateFolder}\{version}";
+                }
+                throw new Exception(Messages.ErrorMessage014);
+            }
             else
                 throw new Exception(Messages.ErrorMessage005);
         }
 
-        public static List<string> ListFolders(ProductDbType dbType, OperationType operationType)
+        public static List<string> ListFolders(ProductDbType dbType, OperationType operationType, int? currentVersion = null, int? updateVersion = null)
         {
             if (dbType == ProductDbType.Oracle)
             {
-                return OracleListFolder
+                if(operationType == OperationType.Install)
+                {
+                    return OracleListFolder
                     .OrderBy(o => o.Key)
                     .Select(s => GetScriptsPath(dbType, operationType) + s.Value)
                     .ToList();
+                }
+                else if (operationType == OperationType.Update)
+                {
+                    if(currentVersion != null)
+                    {
+                        List<string> updateFolders = new List<string>();
+
+                        for (int i = currentVersion.Value+1; i <= updateVersion.Value; i++)
+                        {
+                            updateFolders.AddRange(
+                                OracleListFolder
+                                    .OrderBy(o => o.Key)
+                                    .Select(s => GetScriptsPath(dbType, operationType, i) + s.Value)
+                                    .ToList()
+                            );
+                        }
+                        return updateFolders;
+                    }
+                    else
+                        throw new ArgumentException(Messages.ErrorMessage014);
+                }
             }
             else if (dbType == ProductDbType.SqlServer)
             {
-                return SqlServerListFolder
+                //TODO: Rever ao passar por esse trecho no Sql Server (reaproveitar códigos acima...)
+                if (operationType == OperationType.Install)
+                {
+                    return SqlServerListFolder
                     .OrderBy(o => o.Key)
                     .Select(s => GetScriptsPath(dbType, operationType) + s.Value)
                     .ToList();
+                }
+                else if (operationType == OperationType.Update)
+                {
+                    //TODO
+                }
             }
             else 
             {
                 throw new Exception(Messages.ErrorMessage006);
             }
+
+            throw new ArgumentException(Messages.ErrorMessage007);
         }
 
 

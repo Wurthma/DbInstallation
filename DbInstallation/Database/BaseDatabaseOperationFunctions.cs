@@ -2,8 +2,6 @@
 {
     public abstract class BaseDatabaseOperationFunctions
     {
-        
-
         protected BaseDatabaseOperationFunctions(DatabaseProperties databaseProperties)
         {
             DatabaseProperties = databaseProperties;

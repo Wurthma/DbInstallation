@@ -1,5 +1,6 @@
 ﻿using DbInstallation.Enums;
 using DbInstallation.Interfaces;
+using DbInstallation.Util;
 using NLog;
 using System;
 
@@ -70,11 +71,14 @@ namespace DbInstallation.Database
             {
                 if (operationType == OperationType.Install)
                 {
-                    DatabaseFunctions.Install();
+                    if (DatabaseFunctions.CheckEmptyDatabase())
+                    {
+                        DatabaseFunctions.Install();
+                    }
                 }
                 else if (operationType == OperationType.Update)
                 {
-                    DatabaseFunctions.Update();
+                    DatabaseFunctions.Update(Convert.ToInt32(Common.GetAppSetting("VersionToInstall")));
                 }
                 else
                 {

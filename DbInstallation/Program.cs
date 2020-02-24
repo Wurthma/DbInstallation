@@ -1,7 +1,9 @@
 ﻿using DbInstallation.Database;
 using DbInstallation.Enums;
+using Microsoft.Extensions.Configuration;
 using NLog;
 using System;
+using System.IO;
 
 namespace DbInstallation
 {
@@ -13,6 +15,11 @@ namespace DbInstallation
         {
             try
             {
+                IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", true, true)
+                .Build();
+
                 SelectDatabase(new ProductDatabase());
             }
             catch (Exception ex)

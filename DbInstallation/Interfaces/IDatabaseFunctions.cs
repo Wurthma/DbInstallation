@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using DbInstallation.Enums;
 
 namespace DbInstallation.Interfaces
 {
@@ -10,6 +8,10 @@ namespace DbInstallation.Interfaces
 
         bool Install();
 
-        bool Update();
+        bool Update(int version);
+
+        bool ValidateUpdateVersion();
+
+        bool CheckEmptyDatabase();
     }
 }

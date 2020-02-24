@@ -165,6 +165,16 @@ namespace DbInstallation
         /// <returns></returns>
         public static string ErrorMessage013(int qtyFailures) => string.Format(_errorMessage013, qtyFailures);
 
+        /// <summary>
+        /// An update operation was selected but the parameters to update the database was not set.
+        /// </summary>
+        public static string ErrorMessage014 { get { return @"An update operation was selected but the parameters to update the database was not set."; } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static string ErrorMessage015 { get { return @"No version was found to database. Please, check if database connection is right and if the application was installed."; } }
+
         #endregion Error messages
     }
 }

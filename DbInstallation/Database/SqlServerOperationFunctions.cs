@@ -54,7 +54,7 @@ namespace DbInstallation.Database
             throw new NotImplementedException(); //TODO;
         }
 
-        public bool Update()
+        public bool Update(int version)
         {
             throw new NotImplementedException(); //TODO;
         }
@@ -64,6 +64,7 @@ namespace DbInstallation.Database
             Console.WriteLine(Environment.NewLine);
             Console.WriteLine(Messages.Message002);
             Console.WriteLine(Environment.NewLine);
+
             bool isOk = CheckEmptyDatabase();
 
             if (isOk)
@@ -75,13 +76,13 @@ namespace DbInstallation.Database
             return isOk;
         }
 
-        private bool CheckEmptyDatabase()
+        public bool CheckEmptyDatabase()
         {
             try
             {
                 bool emptyDatabase = false;
                 using (SqlConnection connection = new SqlConnection(ConnectionString))
-                {
+                { //TODO: Revisar método
                     string queryString = "SELECT COUNT(1) FROM sys.objects WHERE is_ms_shipped = 0";
                     SqlCommand command = new SqlCommand(queryString, connection);
                     command.Connection.Open();
@@ -103,6 +104,11 @@ namespace DbInstallation.Database
                 Logger.Error(ex, ex.Message);
                 return false;
             }
+        }
+
+        public bool ValidateUpdateVersion()
+        {
+            throw new NotImplementedException();
         }
     }
 }
