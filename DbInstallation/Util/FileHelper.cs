@@ -260,8 +260,9 @@ namespace DbInstallation.Util
         public static List<string> ListSqlCommandsFromFile(string filePath)
         {
             List<string> sqlCommandList = new List<string>();
-            Regex regex = GetRegexPattern(filePath);
             var content = File.ReadAllText(filePath) + Environment.NewLine; //Adiciona nova linha ao final do conteúdo para o funcionamento correto do regex
+
+            Regex regex = GetRegexPattern(filePath, content);
             MatchCollection matchCollection = regex.Matches(content);
 
             foreach (Match match in matchCollection)
@@ -275,23 +276,26 @@ namespace DbInstallation.Util
             return sqlCommandList;
         }
 
-        private static Regex GetRegexPattern(string file)
+        private static Regex GetRegexPattern(string fileName, string fileContent)
         {
             Regex regex = new Regex(@"(?<cmd>[\s\S.]+?);\s*[\n\r]");
-            if (IsPlSqlCommand(file))
-            {
-                regex = new Regex(@"(?<cmd>[^\s\/][\s\S.]+?;)\s*\/");
-            }
-            else if (IsPlSqlFunctionProceduresPackageTriggerView(file))
+            if (IsPlSqlFunctionProceduresPackageTriggerView(fileName))
             {
                 regex = new Regex(@"(?<cmd>[\s\S.]+?;)\s*\/[\n\r]");
+            }
+            else if (IsPlSqlCommand(fileName) || ContainExplicitDefinitionForPlSqlCommand(fileContent))
+            {
+                regex = new Regex(@"(?<cmd>[^\s\/][\s\S.]+?;)\s*\/");
             }
             return regex;
         }
 
-        private static bool IsPlSqlCommand(string file) => 
-            file.ToUpper().Contains(@"0-PLATYPUS") || 
-            (file.ToUpper().Contains(@"2-BFW") && file.ToUpper().Contains(@"ESTRUTURA"));
+        private static bool ContainExplicitDefinitionForPlSqlCommand(string fileContent) =>
+            fileContent.Contains(Common.GetAppSetting("ExplicitSetPlSqlCommand"));
+
+        private static bool IsPlSqlCommand(string fileName) =>
+            fileName.ToUpper().Contains(@"0-PLATYPUS") || 
+            (fileName.ToUpper().Contains(@"2-BFW") && fileName.ToUpper().Contains(@"ESTRUTURA"));
 
         private static bool IsPlSqlFunctionProceduresPackageTriggerView(string file) => 
             file.ToUpper().Contains(@"\FUNCTIONS\") ||

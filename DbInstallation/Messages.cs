@@ -240,6 +240,16 @@ namespace DbInstallation
         /// </summary>
         public static string ErrorMessage020 { get { return @"An error occurred while trying to execute this action."; } }
 
+        /// <summary>
+        /// An error occurred during the process.
+        /// </summary>
+        public static string ErrorMessage021 { get { return @"An error occurred during the process."; } }
+
+        /// <summary>
+        /// Check the log to perform the necessary corrections and perform the update again.
+        /// </summary>
+        public static string ErrorMessage022 { get { return @"Check the log to perform the necessary corrections and perform the update again."; } }
+
         #endregion Error messages
     }
 }

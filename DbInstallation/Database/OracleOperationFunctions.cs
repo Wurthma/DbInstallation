@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 
 namespace DbInstallation.Database
 {
@@ -76,17 +77,30 @@ namespace DbInstallation.Database
             int currentVersion = GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription"));
             List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Update, currentVersion, version);
             
-            Console.WriteLine(Environment.NewLine);
+            Console.WriteLine();
             Logger.Info(Messages.Message011(DatabaseProperties.DatabaseUser, DatabaseProperties.ServerOrTns, currentVersion));
-            Console.WriteLine(Environment.NewLine);
+            Console.WriteLine();
 
-            if(currentVersion <= version)
+            if(currentVersion >= version)
             {
                 Logger.Error(Messages.ErrorMessage016(version, currentVersion));
                 return false;
             }
 
-            return ExecuteDatabaseCommands(folderList);
+            bool executedWithSuccess = ExecuteDatabaseCommands(folderList);
+
+            if (executedWithSuccess)
+            {
+                return true;
+            }
+            else
+            {
+                Console.WriteLine();
+                Logger.Error(Messages.ErrorMessage021);
+                Logger.Error(Messages.ErrorMessage022);
+                Console.WriteLine();
+                return false;
+            }
         }
 
         private bool ExecuteDatabaseCommands(List<string> folderList)
@@ -111,6 +125,15 @@ namespace DbInstallation.Database
                                     command.ExecuteNonQuery();
                                 }
                             }
+
+                            if(folderList.Last() == folder)
+                            {
+                                //Se for a execução de uma atualização, a cada versão concluída, inserir no BD
+                                if (GetVersionFromDirectoryPath(folder, out int finishedVersion))
+                                {
+                                    InsertDatabaseVersion(finishedVersion, Common.GetAppSetting("ProjectDescription"));
+                                }
+                            }
                         }
                         Console.WriteLine(Environment.NewLine);
                         Logger.Info(Messages.Message008);
@@ -119,6 +142,7 @@ namespace DbInstallation.Database
                     catch (Exception ex)
                     {
                         Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                        return false;
                     }
                 }
             }
@@ -326,6 +350,22 @@ namespace DbInstallation.Database
             {
                 throw ex;
             }
+        }
+
+        /// <summary>
+        /// Return the version that the path represents (if its not an installation)
+        /// </summary>
+        /// <param name="path">Directory path to check.</param>
+        /// <param name="version">The version that path represents.</param>
+        /// <returns>True if an update and version is found, otherwise it returns false.</returns>
+        private bool GetVersionFromDirectoryPath(string path, out int version)
+        {
+            version = 0;
+            if(int.TryParse(Directory.GetParent(path).Name, out version))
+            {
+                return true;
+            }
+            return false;
         }
 
         private void InsertDatabaseVersion(int databaseVersion, string descricaoProjeto)

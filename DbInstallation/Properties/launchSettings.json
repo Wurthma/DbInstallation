@@ -1,8 +1,7 @@
 {
   "profiles": {
     "DbInstallation": {
-      "commandName": "Project",
-      "commandLineArgs": "-newupdt"
+      "commandName": "Project"
     }
   }
 }
