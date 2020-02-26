@@ -69,7 +69,33 @@ namespace DbInstallation.Database
 
         public bool Update(int version)
         {
-            throw new NotImplementedException(); //TODO;
+            int currentVersion = GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription"));
+            List<string> folderList = FileHelper.ListFolders(ProductDbType.SqlServer, OperationType.Update, currentVersion, version);
+
+            Console.WriteLine();
+            Logger.Info(Messages.Message011(DatabaseProperties.DatabaseUser, DatabaseProperties.ServerOrTns, currentVersion));
+            Console.WriteLine();
+
+            if (currentVersion >= version)
+            {
+                Logger.Error(Messages.ErrorMessage016(version, currentVersion));
+                return false;
+            }
+
+            bool executedWithSuccess = ExecuteDatabaseCommands(folderList);
+
+            if (executedWithSuccess)
+            {
+                return true;
+            }
+            else
+            {
+                Console.WriteLine();
+                Logger.Error(Messages.ErrorMessage021);
+                Logger.Error(Messages.ErrorMessage022);
+                Console.WriteLine();
+                return false;
+            }
         }
 
         private bool ExecuteDatabaseCommands(List<string> folderList)
@@ -135,13 +161,42 @@ namespace DbInstallation.Database
             }
         }
 
+        private int GetDatabaseCurrentVersion(string projectDescription)
+        {
+            string sqlQuery = @"SELECT MAX(COD_VERSAO_BANCO) FROM TBFR_VERSAO_BANCO WHERE DES_PROJETO = @projectDescription ";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(ConnectionString))
+                {
+                    using (var command = new SqlCommand(sqlQuery, connection))
+                    {
+                        connection.Open();
+                        command.CommandType = CommandType.Text;
+                        command.Parameters.Add("projectDescription", SqlDbType.VarChar).Value = projectDescription;
+                        SqlDataReader dataReader = command.ExecuteReader();
+
+                        if (dataReader.Read())
+                        {
+                            return Convert.ToInt32(dataReader.GetDecimal(0));
+                        }
+                        throw new Exception(Messages.ErrorMessage015);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
         private bool ValidateDatabase()
         {
             Console.WriteLine(Environment.NewLine);
             Console.WriteLine(Messages.Message002);
             Console.WriteLine(Environment.NewLine);
 
-            bool isOk = CheckEmptyDatabase();
+            bool isOk = true; //Se for necessário validaões adicionar nessa etapa
 
             if (isOk)
             {
@@ -157,8 +212,9 @@ namespace DbInstallation.Database
             try
             {
                 bool emptyDatabase = false;
+                int qtyObjects = 0;
                 using (SqlConnection connection = new SqlConnection(ConnectionString))
-                { //TODO: Revisar método
+                { 
                     string queryString = "SELECT COUNT(1) FROM sys.objects WHERE is_ms_shipped = 0";
                     SqlCommand command = new SqlCommand(queryString, connection);
                     command.Connection.Open();
@@ -166,12 +222,17 @@ namespace DbInstallation.Database
 
                     if (reader.Read())
                     {
-                        emptyDatabase = reader.GetInt32(0) == 0;
+                        qtyObjects = reader.GetInt32(0);
+                        emptyDatabase = qtyObjects == 0;
                     }
                     else
                     {
                         throw new Exception(Messages.ErrorMessage003("SYS.OBJECTS", $@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
                     }
+                }
+                if (!emptyDatabase)
+                {
+                    Logger.Error(Messages.ErrorMessage009($@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}", qtyObjects));
                 }
                 return emptyDatabase;
             }
