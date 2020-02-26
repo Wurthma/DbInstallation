@@ -190,37 +190,46 @@ namespace DbInstallation.Util
 
         public static List<string> ListFolders(ProductDbType dbType, OperationType operationType, int? currentVersion = null, int? updateVersion = null)
         {
+            Dictionary<int, string> folderList = new Dictionary<int, string>();
+
             if (dbType == ProductDbType.Oracle)
             {
-                if(operationType == OperationType.Install)
-                {
-                    return OracleListFolder
-                    .OrderBy(o => o.Key)
-                    .Select(s => GetScriptsPath(dbType, operationType) + s.Value)
-                    .ToList();
-                }
-                else if (operationType == OperationType.Update)
-                {
-                    if(currentVersion != null)
-                    {
-                        List<string> updateFolders = new List<string>();
-
-                        for (int i = currentVersion.Value+1; i <= updateVersion.Value; i++)
-                        {
-                            updateFolders.AddRange(
-                                OracleListFolder
-                                    .OrderBy(o => o.Key)
-                                    .Select(s => GetScriptsPath(dbType, operationType, i) + s.Value)
-                                    .ToList()
-                            );
-                        }
-                        return updateFolders;
-                    }
-                    else
-                        throw new ArgumentException(Messages.ErrorMessage014);
-                }
+                folderList = OracleListFolder;
             }
             else if (dbType == ProductDbType.SqlServer)
+            {
+                folderList = SqlServerListFolder;
+            }
+
+            if (operationType == OperationType.Install)
+            {
+                return folderList
+                .OrderBy(o => o.Key)
+                .Select(s => GetScriptsPath(dbType, operationType) + s.Value)
+                .ToList();
+            }
+            else if (operationType == OperationType.Update)
+            {
+                if (currentVersion != null)
+                {
+                    List<string> updateFolders = new List<string>();
+
+                    for (int i = currentVersion.Value + 1; i <= updateVersion.Value; i++)
+                    {
+                        updateFolders.AddRange(
+                            folderList
+                                .OrderBy(o => o.Key)
+                                .Select(s => GetScriptsPath(dbType, operationType, i) + s.Value)
+                                .ToList()
+                        );
+                    }
+                    return updateFolders;
+                }
+                else
+                    throw new ArgumentException(Messages.ErrorMessage014);
+            }
+
+            if (dbType == ProductDbType.SqlServer)
             {
                 //TODO: Rever ao passar por esse trecho no Sql Server (reaproveitar códigos acima...)
                 if (operationType == OperationType.Install)
@@ -257,65 +266,17 @@ namespace DbInstallation.Util
             }
         }
 
-        public static List<string> ListSqlCommandsFromFile(string filePath)
+        /// <summary>
+        /// Return the version that the path represents (if its not an installation)
+        /// </summary>
+        /// <param name="path">Directory path to check.</param>
+        /// <param name="version">The version that path represents.</param>
+        /// <returns>True if an update and version is found, otherwise it returns false.</returns>
+        public static bool GetVersionFromDirectoryPath(string path, out int version)
         {
-            List<string> sqlCommandList = new List<string>();
-            var content = File.ReadAllText(filePath) + Environment.NewLine; //Adiciona nova linha ao final do conteúdo para o funcionamento correto do regex
-
-            Regex regex = GetRegexPattern(filePath, content);
-            MatchCollection matchCollection = regex.Matches(content);
-
-            foreach (Match match in matchCollection)
+            if (int.TryParse(Directory.GetParent(path).Name, out version))
             {
-                string sqlCommand = match.Groups["cmd"].Value.Trim();
-                if (!IsComment(sqlCommand))
-                {
-                    sqlCommandList.Add(sqlCommand);
-                }
-            }
-            return sqlCommandList;
-        }
-
-        private static Regex GetRegexPattern(string fileName, string fileContent)
-        {
-            Regex regex = new Regex(@"(?<cmd>[\s\S.]+?);\s*[\n\r]");
-            if (IsPlSqlFunctionProceduresPackageTriggerView(fileName))
-            {
-                regex = new Regex(@"(?<cmd>[\s\S.]+?;)\s*\/[\n\r]");
-            }
-            else if (IsPlSqlCommand(fileName) || ContainExplicitDefinitionForPlSqlCommand(fileContent))
-            {
-                regex = new Regex(@"(?<cmd>[^\s\/][\s\S.]+?;)\s*\/");
-            }
-            return regex;
-        }
-
-        private static bool ContainExplicitDefinitionForPlSqlCommand(string fileContent) =>
-            fileContent.Contains(Common.GetAppSetting("ExplicitSetPlSqlCommand"));
-
-        private static bool IsPlSqlCommand(string fileName) =>
-            fileName.ToUpper().Contains(@"0-PLATYPUS") || 
-            (fileName.ToUpper().Contains(@"2-BFW") && fileName.ToUpper().Contains(@"ESTRUTURA"));
-
-        private static bool IsPlSqlFunctionProceduresPackageTriggerView(string file) => 
-            file.ToUpper().Contains(@"\FUNCTIONS\") ||
-            file.ToUpper().Contains(@"\PROCEDURE\") ||
-            file.ToUpper().Contains(@"\PACKAGE\") ||
-            file.ToUpper().Contains(@"\TRIGGER\") ||
-            file.ToUpper().Contains(@"\VIEW\");
-
-        private static bool IsComment(string sqlCommand)
-        {
-            string fullCommand = string.Empty;
-            if (sqlCommand.StartsWith("--"))
-            {
-                Regex regex = new Regex(@"--.+(?<cmd>[\s\S.]*)");
-                MatchCollection matchCollection = regex.Matches(sqlCommand);
-                foreach (Match match in matchCollection)
-                {
-                    fullCommand += match.Groups["cmd"].Value.Trim();
-                }
-                return string.IsNullOrEmpty(fullCommand);
+                return true;
             }
             return false;
         }

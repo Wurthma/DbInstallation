@@ -1,8 +1,14 @@
 ﻿using DbInstallation.Enums;
 using DbInstallation.Interfaces;
+using DbInstallation.Util;
 using NLog;
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace DbInstallation.Database
 {
@@ -51,12 +57,82 @@ namespace DbInstallation.Database
 
         public bool Install()
         {
-            throw new NotImplementedException(); //TODO;
+            List<string> folderList = FileHelper.ListFolders(ProductDbType.SqlServer, OperationType.Install);
+
+            if (!CheckEmptyDatabase())
+            {
+                return false;
+            }
+
+            return ExecuteDatabaseCommands(folderList);
         }
 
         public bool Update(int version)
         {
             throw new NotImplementedException(); //TODO;
+        }
+
+        private bool ExecuteDatabaseCommands(List<string> folderList)
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand() { Connection = connection })
+                {
+                    string sqlCmdAux = string.Empty;
+                    try
+                    {
+                        foreach (string folder in folderList)
+                        {
+                            foreach (string file in FileHelper.ListFiles(folder))
+                            {
+                                string content = File.ReadAllText(file).Trim();
+                                Logger.Info(Messages.Message007(Path.GetFileName(folder), Path.GetFileName(file)));
+
+                                sqlCmdAux = command.CommandText = content;
+                                command.CommandType = CommandType.Text;
+                                command.ExecuteNonQuery();
+                            }
+
+                            if (folderList.Last() == folder)
+                            {
+                                //Se for a execução de uma atualização, a cada versão concluída, inserir no BD
+                                if (FileHelper.GetVersionFromDirectoryPath(folder, out int finishedVersion))
+                                {
+                                    InsertDatabaseVersion(finishedVersion, Common.GetAppSetting("ProjectDescription"));
+                                }
+                            }
+                        }
+                        Console.WriteLine();
+                        Logger.Info(Messages.Message008);
+                        Console.WriteLine();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void InsertDatabaseVersion(int databaseVersion, string descricaoProjeto)
+        {
+            string sqlQuery = @"INSERT INTO TBFR_VERSAO_BANCO (COD_VERSAO_BANCO, DAT_VERSAO, QTD_BLOCO, DES_PROJETO) VALUES (@version, @dateVersion, 0, @projectDescription) ";
+
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                using (var command = new SqlCommand(sqlQuery, connection))
+                {
+                    connection.Open();
+                    command.CommandType = CommandType.Text;
+                    command.Parameters.Add("version", SqlDbType.Int).Value = databaseVersion;
+                    command.Parameters.Add("dateVersion", SqlDbType.Date).Value = DateTime.Now;
+                    command.Parameters.Add("projectDescription", SqlDbType.VarChar).Value = descricaoProjeto;
+                    command.ExecuteNonQuery();
+                }
+            }
         }
 
         private bool ValidateDatabase()
@@ -104,11 +180,6 @@ namespace DbInstallation.Database
                 Logger.Error(ex, ex.Message);
                 return false;
             }
-        }
-
-        public bool ValidateUpdateVersion()
-        {
-            throw new NotImplementedException();
         }
     }
 }

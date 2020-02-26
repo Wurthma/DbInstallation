@@ -53,7 +53,7 @@ namespace DbInstallation
 
             if (productDatabase.SetConnection(dbType))
             {
-                SelectOperation(dbType, productDatabase);
+                SelectOperation(productDatabase);
             }
             else
             {
@@ -61,7 +61,7 @@ namespace DbInstallation
             }
         }
 
-        private static void SelectOperation(ProductDbType dbType, ProductDatabase productDatabase)
+        private static void SelectOperation(ProductDatabase productDatabase)
         {
             Console.WriteLine(Environment.NewLine);
             Console.WriteLine("Type to select operation:");
@@ -70,7 +70,7 @@ namespace DbInstallation
 
             OperationType operationType = productDatabase.GetOperationType(Console.ReadLine());
             
-            productDatabase.StartDatabaseOperation(dbType, operationType);
+            productDatabase.StartDatabaseOperation(operationType);
         }
     }
 }

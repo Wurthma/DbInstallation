@@ -65,7 +65,7 @@ namespace DbInstallation.Database
             return OperationType.None;
         }
 
-        public void StartDatabaseOperation(ProductDbType dbType, OperationType operationType)
+        public void StartDatabaseOperation(OperationType operationType)
         {
             if (_isConnectionDefined)
             {

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace DbInstallation.Database
 {
@@ -118,7 +119,7 @@ namespace DbInstallation.Database
                             foreach (string file in FileHelper.ListFiles(folder))
                             {
                                 Logger.Info(Messages.Message007(Path.GetFileName(folder), Path.GetFileName(file)));
-                                foreach (string sqlCmd in FileHelper.ListSqlCommandsFromFile(file))
+                                foreach (string sqlCmd in ListSqlCommandsFromFile(file))
                                 {
                                     sqlCmdAux = command.CommandText = ReplaceDatabaseProperties(sqlCmd);
                                     command.CommandType = CommandType.Text;
@@ -129,14 +130,15 @@ namespace DbInstallation.Database
                             if(folderList.Last() == folder)
                             {
                                 //Se for a execução de uma atualização, a cada versão concluída, inserir no BD
-                                if (GetVersionFromDirectoryPath(folder, out int finishedVersion))
+                                if (FileHelper.GetVersionFromDirectoryPath(folder, out int finishedVersion))
                                 {
                                     InsertDatabaseVersion(finishedVersion, Common.GetAppSetting("ProjectDescription"));
                                 }
                             }
                         }
-                        Console.WriteLine(Environment.NewLine);
+                        Console.WriteLine();
                         Logger.Info(Messages.Message008);
+                        Console.WriteLine();
                         ValidateDatabaseInstallation();
                     }
                     catch (Exception ex)
@@ -352,22 +354,6 @@ namespace DbInstallation.Database
             }
         }
 
-        /// <summary>
-        /// Return the version that the path represents (if its not an installation)
-        /// </summary>
-        /// <param name="path">Directory path to check.</param>
-        /// <param name="version">The version that path represents.</param>
-        /// <returns>True if an update and version is found, otherwise it returns false.</returns>
-        private bool GetVersionFromDirectoryPath(string path, out int version)
-        {
-            version = 0;
-            if(int.TryParse(Directory.GetParent(path).Name, out version))
-            {
-                return true;
-            }
-            return false;
-        }
-
         private void InsertDatabaseVersion(int databaseVersion, string descricaoProjeto)
         {
             string sqlQuery = @"INSERT INTO TBFR_VERSAO_BANCO (COD_VERSAO_BANCO, DAT_VERSAO, QTD_BLOCO, DES_PROJETO) VALUES (:version, :dateVersion, 0, :projectDescription) ";
@@ -549,9 +535,63 @@ namespace DbInstallation.Database
             }
         }
 
-        public bool ValidateUpdateVersion()
+        private static Regex GetRegexPattern(string fileName, string fileContent)
         {
-            throw new NotImplementedException();
+            Regex regex = new Regex(@"(?<cmd>[\s\S.]+?);\s*[\n\r]");
+            if (IsPlSqlFunctionProceduresPackageTriggerView(fileName))
+            {
+                regex = new Regex(@"(?<cmd>[\s\S.]+?;)\s*\/[\n\r]");
+            }
+            else if (IsPlatypusSqlCommand(fileName) || ContainExplicitDefinitionForPlSqlCommand(fileContent))
+            {
+                regex = new Regex(@"(?<cmd>[^\s\/][\s\S.]+?;)\s*\/");
+            }
+            return regex;
+        }
+
+        private static bool ContainExplicitDefinitionForPlSqlCommand(string fileContent) =>
+            fileContent.Contains(Common.GetAppSetting("ExplicitSetPlSqlCommand"));
+
+        private static bool IsPlSqlFunctionProceduresPackageTriggerView(string file) =>
+            file.ToUpper().Contains(@"\FUNCTIONS\") ||
+            file.ToUpper().Contains(@"\PROCEDURE\") ||
+            file.ToUpper().Contains(@"\PACKAGE\") ||
+            file.ToUpper().Contains(@"\TRIGGER\") ||
+            file.ToUpper().Contains(@"\VIEW\");
+
+        private static List<string> ListSqlCommandsFromFile(string filePath)
+        {
+            List<string> sqlCommandList = new List<string>();
+            var content = File.ReadAllText(filePath) + Environment.NewLine; //Adiciona nova linha ao final do conteúdo para o funcionamento correto do regex
+
+            Regex regex = GetRegexPattern(filePath, content);
+            MatchCollection matchCollection = regex.Matches(content);
+
+            foreach (Match match in matchCollection)
+            {
+                string sqlCommand = match.Groups["cmd"].Value.Trim();
+                if (!IsComment(sqlCommand))
+                {
+                    sqlCommandList.Add(sqlCommand);
+                }
+            }
+            return sqlCommandList;
+        }
+
+        private static bool IsComment(string sqlCommand)
+        {
+            string fullCommand = string.Empty;
+            if (sqlCommand.StartsWith("--"))
+            {
+                Regex regex = new Regex(@"--.+(?<cmd>[\s\S.]*)");
+                MatchCollection matchCollection = regex.Matches(sqlCommand);
+                foreach (Match match in matchCollection)
+                {
+                    fullCommand += match.Groups["cmd"].Value.Trim();
+                }
+                return string.IsNullOrEmpty(fullCommand);
+            }
+            return false;
         }
     }
 }
