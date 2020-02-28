@@ -99,6 +99,14 @@ namespace DbInstallation
         /// <returns></returns>
         public static string Message013(string folder) => string.Format(_message013, folder);
 
+        private static string _message014 { get { return "The database will be updated to version {0}."; } }
+        /// <summary>
+        /// "The database will be updated to version {0}."
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static string Message014(int version) => string.Format(_message014, version);
+
         #endregion Info messages
 
         #region Error messages
@@ -249,6 +257,11 @@ namespace DbInstallation
         /// Check the log to perform the necessary corrections and perform the update again.
         /// </summary>
         public static string ErrorMessage022 { get { return @"Check the log to perform the necessary corrections and perform the update again."; } }
+
+        /// <summary>
+        /// Check the log to perform the necessary corrections and perform the update again.
+        /// </summary>
+        public static string ErrorMessage023 { get { return @"Invalid arguments."; } }
 
         #endregion Error messages
     }

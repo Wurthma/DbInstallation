@@ -28,34 +28,36 @@ namespace DbInstallation.Util
         private static Dictionary<int, string> OracleListFolder { 
             get 
             {
-                var dict = new Dictionary<int, string>();
-                dict.Add(0, @"\Platypus");
-                dict.Add(1, @"\Table");
-                dict.Add(2, @"\Constraints");
-                dict.Add(3, @"\Sequence");
-                dict.Add(4, @"\Functions");
-                dict.Add(5, @"\Procedure");
-                dict.Add(6, @"\Package");
-                dict.Add(7, @"\Trigger");
-                dict.Add(8, @"\View");
-                dict.Add(9, @"\Carga");
-                return dict;
+                return new Dictionary<int, string>
+                {
+                    { 0, @"\Platypus" },
+                    { 1, @"\Table" },
+                    { 2, @"\Constraints" },
+                    { 3, @"\Sequence" },
+                    { 4, @"\Functions" },
+                    { 5, @"\Procedure" },
+                    { 6, @"\Package" },
+                    { 7, @"\Trigger" },
+                    { 8, @"\View" },
+                    { 9, @"\Carga" }
+                };
             } 
         }
 
         private static Dictionary<int, string> SqlServerListFolder { 
             get 
             {
-                var dict = new Dictionary<int, string>();
-                dict.Add(0, @"\Platypus");
-                dict.Add(1, @"\Table");
-                dict.Add(2, @"\Constraints");
-                dict.Add(3, @"\Functions");
-                dict.Add(4, @"\Procedure");
-                dict.Add(5, @"\Trigger");
-                dict.Add(6, @"\View");
-                dict.Add(7, @"\Carga");
-                return dict;
+                return new Dictionary<int, string>
+                {
+                    { 0, @"\Platypus" },
+                    { 1, @"\Table" },
+                    { 2, @"\Constraints" },
+                    { 3, @"\Functions" },
+                    { 4, @"\Procedure" },
+                    { 5, @"\Trigger" },
+                    { 6, @"\View" },
+                    { 7, @"\Carga" }
+                };
             } 
         }
 

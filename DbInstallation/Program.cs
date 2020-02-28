@@ -32,14 +32,64 @@ namespace DbInstallation
         {
             if (args.Length > 0)
             {
-                if (args[0] == "-newupdt")
+                string argMaster = args[0].ToLower();
+                if (argMaster == "-newupdt")
                 {
                     if (!FileHelper.CreateNextUpdateFolders())
                     {
                         othersLogger.Error(Messages.ErrorMessage020);
                     }
                 }
-                return;
+                else if (argMaster == "-oracle")
+                {// -oracle owner password tnsname td ti [i|u]
+                    if(args.Length == 7)
+                    {
+                        var databaseProperties = new DatabaseProperties(args[1], args[2], args[3], args[4], args[5]);
+                        string operation = args[6];
+
+                        SetConnectionStartDatabaseOperation(ProductDbType.Oracle, databaseProperties, operation);
+                    }
+                }
+                else if (argMaster == "-sqlserver")
+                {// -sqlserver user password server databaseName install ||OR|| -sqlserver trusted server databaseName [i|u]
+                    if (args.Length >= 4)
+                    {
+                        DatabaseProperties databaseProperties;
+                        string operation;
+
+                        if (args.Length == 6)
+                        {
+                            operation = args[5];
+                            databaseProperties = new DatabaseProperties(args[1], args[2], args[3], args[4], false);
+                        }
+                        else if (args.Length == 4)
+                        {
+                            operation = args[3];
+                            databaseProperties = new DatabaseProperties(null, null, args[1], args[2], true);
+                        }
+                        else
+                        {
+                            Console.WriteLine(Messages.ErrorMessage023);
+                            return;
+                        }
+
+                        SetConnectionStartDatabaseOperation(ProductDbType.SqlServer, databaseProperties, operation);
+                    }
+                }
+            }
+        }
+
+        private static void SetConnectionStartDatabaseOperation(ProductDbType dbType, DatabaseProperties databaseProperties, string operation)
+        {
+            var productDatabase = new ProductDatabase();
+            if (productDatabase.SetConnection(dbType, databaseProperties))
+            {
+                OperationType operationType = productDatabase.GetOperationType(operation);
+                productDatabase.StartDatabaseOperation(operationType);
+            }
+            else
+            {
+                throw new Exception(Messages.ErrorMessage001);
             }
         }
 
