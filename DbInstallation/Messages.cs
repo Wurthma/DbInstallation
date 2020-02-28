@@ -107,6 +107,8 @@ namespace DbInstallation
         /// <returns></returns>
         public static string Message014(int version) => string.Format(_message014, version);
 
+        public static string Message015 { get { return "### Application started! ###"; } }
+
         #endregion Info messages
 
         #region Error messages

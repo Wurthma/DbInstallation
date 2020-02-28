@@ -12,7 +12,7 @@ namespace DbInstallation.Database
 
         private bool _isConnectionDefined;
 
-        public IDatabaseFunctions DatabaseFunctions { get; private set; }
+        private IDatabaseFunctions DatabaseFunctions { get; set; }
 
         public ProductDatabase()
         {
@@ -31,6 +31,9 @@ namespace DbInstallation.Database
                 return Connect(dbType);
             }
         }
+
+        public bool SetConnection(ProductDbType dbType, DatabaseProperties databaseProperties) => 
+            Connect(dbType, databaseProperties);
 
         public ProductDbType GetDatabaseType(string dbType)
         {
@@ -75,7 +78,11 @@ namespace DbInstallation.Database
                 }
                 else if (operationType == OperationType.Update)
                 {
-                    DatabaseFunctions.Update(Convert.ToInt32(Common.GetAppSetting("VersionToInstall")));
+                    int versionToInstall = Convert.ToInt32(Common.GetAppSetting("VersionToInstall"));
+                    Console.WriteLine();
+                    Logger.Info(Messages.Message014(versionToInstall));
+                    Console.WriteLine();
+                    DatabaseFunctions.Update(versionToInstall);
                 }
                 else
                 {
@@ -91,6 +98,11 @@ namespace DbInstallation.Database
         private bool Connect(ProductDbType dbType)
         {
             DatabaseProperties databaseProperties = RequestDbInputsProperties(dbType);
+            return Connect(dbType, databaseProperties);
+        }
+
+        private bool Connect(ProductDbType dbType, DatabaseProperties databaseProperties)
+        {
             IDatabaseFunctions databaseFunctions;
             if (dbType == ProductDbType.Oracle)
             {

@@ -13,6 +13,8 @@ namespace DbInstallation
 
         static void Main(string[] args)
         {
+            Logger.Info(Messages.Message015);
+            Console.WriteLine();
             try
             {
                 if(args.Length > 0)
