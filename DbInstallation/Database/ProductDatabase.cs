@@ -65,6 +65,11 @@ namespace DbInstallation.Database
                 Logger.Info("Selected Update operation.");
                 return OperationType.Update;
             }
+            else if (operation.ToUpper() == "GINT")
+            {
+                Logger.Info("Selected script generation for Integrity Validation.");
+                return OperationType.GenerateIntegrityValidation;
+            }
             return OperationType.None;
         }
 
@@ -72,17 +77,21 @@ namespace DbInstallation.Database
         {
             if (_isConnectionDefined)
             {
+                int versionToInstall = Convert.ToInt32(Common.GetAppSetting("VersionToInstall"));
                 if (operationType == OperationType.Install)
                 {
                     DatabaseFunctions.Install();
                 }
                 else if (operationType == OperationType.Update)
                 {
-                    int versionToInstall = Convert.ToInt32(Common.GetAppSetting("VersionToInstall"));
                     Console.WriteLine();
                     Logger.Info(Messages.Message014(versionToInstall));
                     Console.WriteLine();
                     DatabaseFunctions.Update(versionToInstall);
+                }
+                else if (operationType == OperationType.GenerateIntegrityValidation)
+                {
+                    DatabaseFunctions.GenerateIntegrityValidation();
                 }
                 else
                 {

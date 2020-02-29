@@ -57,18 +57,24 @@ namespace DbInstallation.Database
 
         public bool Install()
         {
-            List<string> folderList = FileHelper.ListFolders(ProductDbType.SqlServer, OperationType.Install);
-
             if (!CheckEmptyDatabase())
             {
                 return false;
             }
+
+            List<string> folderList = FileHelper.ListFolders(ProductDbType.SqlServer, OperationType.Install);
 
             return ExecuteDatabaseCommands(folderList);
         }
 
         public bool Update(int version)
         {
+            if (CheckEmptyDatabase())
+            {
+                Logger.Error(Messages.ErrorMessage024(DatabaseProperties.DatabaseName, version));
+                return false;
+            }
+
             int currentVersion = GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription"));
             List<string> folderList = FileHelper.ListFolders(ProductDbType.SqlServer, OperationType.Update, currentVersion, version);
 
@@ -241,6 +247,11 @@ namespace DbInstallation.Database
                 Logger.Error(ex, ex.Message);
                 return false;
             }
+        }
+
+        public void GenerateIntegrityValidation()
+        {
+            throw new NotImplementedException();
         }
     }
 }

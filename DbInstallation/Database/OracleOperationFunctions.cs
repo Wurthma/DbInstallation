@@ -25,6 +25,38 @@ namespace DbInstallation.Database
             public string NonconformityType { get; set; }
         }
 
+        private class IntegrityHash
+        {
+            public decimal ObjectSystemId { get; set; }
+            public string ObjectName { private get; set; }
+            public string ObjectType { private get; set; }
+            public string VersionAlteredObject { private get; set; }
+            public DateTime CreationDate { private get; set; }
+            public string ObjectHash { private get; set; }
+            public string Flag { private get; set; }
+
+            public string GetObjectName() => GetStringProperty(ObjectName);
+
+            public string GetObjectType() => GetStringProperty(ObjectType);
+
+            public string GetVersionAlteredObject() => GetStringProperty(VersionAlteredObject);
+
+            public string GetCreationDate() => 
+                $@"to_date('{CreationDate.Day.ToString("00")}-{CreationDate.Month.ToString("00")}-{CreationDate.Year} {CreationDate.Hour.ToString("00")}:{CreationDate.Minute.ToString("00")}:{CreationDate.Second.ToString("00")}', 'dd-mm-yyyy hh24:mi:ss')";
+
+            public string GetObjectHash() => GetStringProperty(ObjectHash);
+
+            public string GetFlag() => GetStringProperty(Flag);
+
+            private string GetStringProperty(string value)
+            {
+                if (string.IsNullOrEmpty(value))
+                    return "null";
+                else
+                    return $@"'{value}'";
+            }
+        }
+
         public OracleOperationFunctions(DatabaseProperties databaseProperties)
             : base(databaseProperties)
         {
@@ -63,18 +95,24 @@ namespace DbInstallation.Database
 
         public bool Install()
         {
-            List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Install);
-
             if (!CheckEmptyDatabase())
             {
                 return false;
             }
+
+            List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Install);
 
             return ExecuteDatabaseCommands(folderList);
         }
 
         public bool Update(int version)
         {
+            if (CheckEmptyDatabase())
+            {
+                Logger.Error(Messages.ErrorMessage024(DatabaseProperties.DatabaseUser, version));
+                return false;
+            }
+
             int currentVersion = GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription"));
             List<string> folderList = FileHelper.ListFolders(ProductDbType.Oracle, OperationType.Update, currentVersion, version);
             
@@ -157,7 +195,16 @@ namespace DbInstallation.Database
             LogNlsCharacterSetParameters();
             CompileObjects();
             CompileObjects();
-            LoadDatabaseIntegrityHash();
+            if(IsOracleIntegrityValidationEnable())
+            {
+                LoadDatabaseIntegrityHash();
+            }
+            else
+            {
+                Console.WriteLine();
+                IntegrityLogger.Warn(Messages.Message016);
+                Console.WriteLine();
+            }
         }
 
         private void CompileObjects()
@@ -182,10 +229,11 @@ namespace DbInstallation.Database
             }
         }
 
-        private bool LoadDatabaseIntegrityHash()
+        private bool LoadDatabaseIntegrityHash(bool generate = false)
         {
             using (var oracleConnection = new OracleConnection(ConnectionString))
             {
+                Environment.SetEnvironmentVariable("nls_lang", "AMERICAN_AMERICA.WE8MSWIN1252");
                 oracleConnection.Open();
                 using (var command = new OracleCommand() { Connection = oracleConnection })
                 {
@@ -195,6 +243,10 @@ namespace DbInstallation.Database
                         command.CommandText = "PRC_CMP_CARREGA_INTEGRID_HASH";
                         command.CommandType = CommandType.StoredProcedure;
                         command.Parameters.Add("pi_s_schema_owner", OracleDbType.Varchar2, ParameterDirection.Input).Value = DatabaseProperties.DatabaseUser;
+                        if (generate)
+                        {
+                            command.Parameters.Add("pi_s_operacao", OracleDbType.Varchar2, ParameterDirection.Input).Value = "GENERATE";
+                        }
                         command.ExecuteNonQuery();
                     }
                     catch (Exception ex)
@@ -203,7 +255,11 @@ namespace DbInstallation.Database
                     }
                 }
             }
-            return GenerateIntegrityLog();
+            if (!generate)
+            {
+                return GenerateIntegrityLog();
+            }
+            return true;
         }
 
         private bool GenerateIntegrityLog()
@@ -592,6 +648,86 @@ namespace DbInstallation.Database
                 return string.IsNullOrEmpty(fullCommand);
             }
             return false;
+        }
+
+        private static bool IsOracleIntegrityValidationEnable() =>
+            Common.GetAppSetting("OracleIntegrityValidation").ToLower() == "true";
+
+        public void GenerateIntegrityValidation()
+        {
+            if (IsOracleIntegrityValidationEnable())
+            {
+                int version = GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription"));
+                LoadDatabaseIntegrityHash(true);
+                IEnumerable<IntegrityHash> listIntegrityHash = GetDataIntegrityHash();
+                string fileContent = $@"--Script data load for Oracle integrity Validation {Environment.NewLine}";
+                fileContent += $@"--SCRIPT GENERATED FOR VERSION: {version} {Environment.NewLine}";
+                fileContent += $@"--Generation date: {DateTime.Now} {Environment.NewLine}";
+                fileContent += $@"--System Variable nls_lang: {Environment.GetEnvironmentVariable("nls_lang", EnvironmentVariableTarget.Process)} {Environment.NewLine}{Environment.NewLine}";
+                fileContent += "--Oracle NLS_DATABASE_PARAMETERS:";
+
+                Dictionary<string, string> nlsDatabaseParameters = GetNlsCharacterSetParameters();
+                foreach (var item in nlsDatabaseParameters)
+                {
+                    fileContent += $@"--{item.Key}: {item.Value} {Environment.NewLine}";
+                }
+
+                fileContent += $@"{Environment.NewLine}DELETE FROM CMP_VERIFIC_INTEGRIDADE_HASH; {Environment.NewLine}{Environment.NewLine}";
+
+                foreach (IntegrityHash integrityHash in listIntegrityHash)
+                {
+                    fileContent += "insert into CMP_VERIFIC_INTEGRIDADE_HASH(N_COD_SISTEMA_OBJETO, S_NOME_OBJETO, S_TIPO_OBJETO, S_VERSAO_ALTEROU_OBJETO, D_DATA_CRIACAO, S_HASH_OBJETO, S_FLAG) ";
+                    fileContent += $@"values({integrityHash.ObjectSystemId}, {integrityHash.GetObjectName()}, {integrityHash.GetObjectType()}, {integrityHash.GetVersionAlteredObject()}, ";
+                    fileContent += $@"{integrityHash.GetCreationDate()}, {integrityHash.GetObjectHash()}, {integrityHash.GetFlag()}); {Environment.NewLine}";
+                }
+
+                var date = DateTime.Now;
+                FileHelper.CreateSqlSciptFile(ProductDbType.Oracle, $@"COMPARE_V{version}_{date.Year}{date.Month}{date.Day}_{date.Hour}{date.Minute}{date.Second}", fileContent);
+            }
+            else
+            {
+                Console.WriteLine();
+                IntegrityLogger.Warn(Messages.Message016);
+                Console.WriteLine();
+            }
+        }
+
+        private IEnumerable<IntegrityHash> GetDataIntegrityHash()
+        {
+            List<IntegrityHash> listIntegrityHash = new List<IntegrityHash>();
+            string sqlQuery = "SELECT * FROM CMP_VERIFIC_INTEGRIDADE_HASH";
+            
+            try
+            {
+                using (OracleConnection oracleConnection = new OracleConnection(ConnectionString))
+                {
+                    using (var command = new OracleCommand(sqlQuery, oracleConnection))
+                    {
+                        oracleConnection.Open();
+                        command.CommandType = CommandType.Text;
+                        OracleDataReader dataReader = command.ExecuteReader();
+
+                        while (dataReader.Read())
+                        {
+                            listIntegrityHash.Add(new IntegrityHash()
+                            {
+                                ObjectSystemId = dataReader.GetDecimal("N_COD_SISTEMA_OBJETO"),
+                                ObjectName = dataReader.GetString("S_NOME_OBJETO"),
+                                ObjectType = dataReader.GetString("S_TIPO_OBJETO"),
+                                VersionAlteredObject = dataReader.IsDBNull("S_VERSAO_ALTEROU_OBJETO") ? null : dataReader.GetString("S_VERSAO_ALTEROU_OBJETO"),
+                                CreationDate = dataReader.GetDateTime("D_DATA_CRIACAO"),
+                                ObjectHash = dataReader.GetString("S_HASH_OBJETO"),
+                                Flag = dataReader.IsDBNull("S_FLAG") ? null : dataReader.GetChar("S_FLAG").ToString()
+                            });
+                        }
+                        return listIntegrityHash;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }
