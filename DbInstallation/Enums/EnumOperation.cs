@@ -4,6 +4,7 @@
     {
         None = 0,
         Install = 1,
-        Update = 2
+        Update = 2,
+        GenerateIntegrityValidation = 3
     }
 }

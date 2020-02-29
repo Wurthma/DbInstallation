@@ -114,8 +114,8 @@ Os arquivos **.sql* serão executados por ordem alfabética, para manter a ordem
 
 **-newupdt**: cria a próxima pasta de update para Oracle e Sql Server. Se a ultima pasta  é a "95" automaticamente será criada toda estrutura da "96".
 
-**-oracle [owner] [password] [tnsname] [tablespaceData] [tablespaceIndex] [i|u]**: argumentos para instalação ou atualização do oracle ("i" para instalação e "u" para atualização).
+**-oracle <owner> <password> <tnsname> <tablespaceData> <tablespaceIndex> <i | u | gint>**: argumentos usados para instalação, atualização ou geração da validação de integridade do oracle ("i" para instalação, "u" para atualização ou gint para "generate integrity validation").
 
-**-sqlserver [user] [password] [server] [databaseName] [i|u]**: argumentos para instalação ou atualização do Sql Server ("i" para instalação e "u" para atualização).
+**-sqlserver [<user>] [<password>] <server> <databaseName> <i | u>**: argumentos para instalação ou atualização do Sql Server ("i" para instalação e "u" para atualização).
 
-**-sqlserver [server] [databaseName] [i|u]**: argumentos para instalação ou atualização do Sql Server com **trusted connection** ("i" para instalação e "u" para atualização).
+**-sqlserver <server> <databaseName> <i | u>**: argumentos para instalação ou atualização do Sql Server com **trusted connection** ("i" para instalação e "u" para atualização).

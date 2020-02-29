@@ -145,6 +145,30 @@ namespace DbInstallation.Util
             return foldersCreated;
         }
 
+        public static bool CreateSqlSciptFile(ProductDbType dbType, string fileName, string fileContent)
+        {
+            string filePath = $@"{GetBaseFolder(dbType)}\{fileName}.sql";
+            if (File.Exists(filePath))
+            {
+                othersLogger.Error(Messages.ErrorMessage025(filePath));
+            }
+
+            using var file = File.CreateText(filePath);
+            file.Write(fileContent);
+            file.Close();
+
+            if (File.Exists(filePath))
+            {
+                othersLogger.Info(Messages.Message017(filePath));
+                return true;
+            }
+            else
+            {
+                othersLogger.Error(Messages.ErrorMessage025(filePath));
+                return false;
+            }
+        }
+
         private static int GetNextUpdateFolder()
         {
             var oracleDirectoryList = Directory.GetDirectories(

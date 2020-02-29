@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DbInstallation
 {
@@ -107,7 +105,23 @@ namespace DbInstallation
         /// <returns></returns>
         public static string Message014(int version) => string.Format(_message014, version);
 
+        /// <summary>
+        /// ### Application started! ###
+        /// </summary>
         public static string Message015 { get { return "### Application started! ###"; } }
+
+        /// <summary>
+        /// Oracle integrity validation is disabled.
+        /// </summary>
+        public static string Message016 { get { return "Oracle integrity validation is disabled."; } }
+
+        private static string _message017 { get { return "File '{0}' successfully created!"; } }
+        /// <summary>
+        /// File '{0}' successfully created!
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public static string Message017(string fileName) => string.Format(_message017, fileName);
 
         #endregion Info messages
 
@@ -261,9 +275,27 @@ namespace DbInstallation
         public static string ErrorMessage022 { get { return @"Check the log to perform the necessary corrections and perform the update again."; } }
 
         /// <summary>
-        /// Check the log to perform the necessary corrections and perform the update again.
+        /// Invalid arguments.
         /// </summary>
         public static string ErrorMessage023 { get { return @"Invalid arguments."; } }
+
+        private static string _errorMessage024 { get { return @"Database {0} is empty. Update to version {1} was aborted."; } }
+        /// <summary>
+        /// Database {0} is empty. Update to version {1} was aborted.
+        /// </summary>
+        /// <param name="databaseName"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static string ErrorMessage024(string databaseName, int version) => string.Format(_errorMessage024, databaseName, version);
+
+        private static string _errorMessage025 { get { return "File {0} already exists. Delete it before generate another file."; } }
+        /// <summary>
+        /// Database {0} is empty. Update to version {1} was aborted.
+        /// </summary>
+        /// <param name="databaseName"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static string ErrorMessage025(string fileName) => string.Format(_errorMessage025, fileName);
 
         #endregion Error messages
     }
