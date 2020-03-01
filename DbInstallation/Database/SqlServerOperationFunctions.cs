@@ -8,7 +8,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace DbInstallation.Database
 {
@@ -59,6 +58,7 @@ namespace DbInstallation.Database
         {
             if (!CheckEmptyDatabase())
             {
+                Logger.Error(Messages.ErrorMessage009($@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
                 return false;
             }
 
@@ -123,7 +123,24 @@ namespace DbInstallation.Database
 
                                 sqlCmdAux = command.CommandText = content;
                                 command.CommandType = CommandType.Text;
-                                command.ExecuteNonQuery();
+                                try
+                                {
+                                    command.ExecuteNonQuery();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                                    if (Common.ContinueExecutionOnScriptError())
+                                    {
+                                        Console.WriteLine(Messages.ErrorMessage026);
+                                        Console.ReadLine();
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        return false;
+                                    }
+                                }
                             }
 
                             if (folderList.Last() == folder)
@@ -139,10 +156,9 @@ namespace DbInstallation.Database
                         Logger.Info(Messages.Message008);
                         Console.WriteLine();
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
-                        return false;
+                        throw;
                     }
                 }
             }
@@ -235,10 +251,6 @@ namespace DbInstallation.Database
                     {
                         throw new Exception(Messages.ErrorMessage003("SYS.OBJECTS", $@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
                     }
-                }
-                if (!emptyDatabase)
-                {
-                    Logger.Error(Messages.ErrorMessage009($@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}", qtyObjects));
                 }
                 return emptyDatabase;
             }

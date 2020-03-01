@@ -77,7 +77,7 @@ namespace DbInstallation.Database
         {
             if (_isConnectionDefined)
             {
-                int versionToInstall = Convert.ToInt32(Common.GetAppSetting("VersionToInstall"));
+                int versionToUpdate = Convert.ToInt32(Common.GetAppSetting("VersionToUpdate"));
                 if (operationType == OperationType.Install)
                 {
                     DatabaseFunctions.Install();
@@ -85,9 +85,9 @@ namespace DbInstallation.Database
                 else if (operationType == OperationType.Update)
                 {
                     Console.WriteLine();
-                    Logger.Info(Messages.Message014(versionToInstall));
+                    Logger.Info(Messages.Message014(versionToUpdate));
                     Console.WriteLine();
-                    DatabaseFunctions.Update(versionToInstall);
+                    DatabaseFunctions.Update(versionToUpdate);
                 }
                 else if (operationType == OperationType.GenerateIntegrityValidation)
                 {

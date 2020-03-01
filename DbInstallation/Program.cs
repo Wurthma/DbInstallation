@@ -48,8 +48,12 @@ namespace DbInstallation
                     {
                         var databaseProperties = new DatabaseProperties(args[1], args[2], args[3], args[4], args[5]);
                         string operation = args[6];
-
                         SetConnectionStartDatabaseOperation(ProductDbType.Oracle, databaseProperties, operation);
+                    }
+                    else
+                    {
+                        othersLogger.Error(Messages.ErrorMessage023);
+                        return;
                     }
                 }
                 else if (argMaster == "-sqlserver")
@@ -71,7 +75,7 @@ namespace DbInstallation
                         }
                         else
                         {
-                            Console.WriteLine(Messages.ErrorMessage023);
+                            othersLogger.Error(Messages.ErrorMessage023);
                             return;
                         }
 

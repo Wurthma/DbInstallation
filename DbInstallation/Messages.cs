@@ -167,22 +167,22 @@ namespace DbInstallation
         /// </summary>
         public static string ErrorMessage007 { get { return "Invalid Database type option."; } }
 
-        private static string _errorMessage008 { get { return "{0} is not a valid directory."; } }
+        private static string _errorMessage008 { get { return "There are no files for directory {0}"; } }
         /// <summary>
-        /// {0} is not a valid directory.
+        /// There are no files for directory {0}
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
         public static string ErrorMessage008(string path) => string.Format(_errorMessage008, path);
 
-        private static string _errorMessage009 { get { return "Database {0} is not empty. Found {1} objects."; } }
+        private static string _errorMessage009 { get { return "Database {0} is not empty."; } }
         /// <summary>
-        /// Database {0} is not empty. Found {1} objects.
+        /// Database {0} is not empty.
         /// </summary>
         /// <param name="databaseName"></param>
         /// <param name="numObjects"></param>
         /// <returns></returns>
-        public static string ErrorMessage009(string databaseName, decimal numObjects) => string.Format(_errorMessage009, databaseName, numObjects);
+        public static string ErrorMessage009(string databaseName) => string.Format(_errorMessage009, databaseName);
 
         private static string _errorMessage010 { get { return @"Failed to execute sql command: " + Environment.NewLine + "{0}"; } }
         /// <summary>
@@ -296,6 +296,11 @@ namespace DbInstallation
         /// <param name="version"></param>
         /// <returns></returns>
         public static string ErrorMessage025(string fileName) => string.Format(_errorMessage025, fileName);
+
+        /// <summary>
+        /// An error occurred while trying to execute SQL script. Press any key to continue or end de process by closing it.
+        /// </summary>
+        public static string ErrorMessage026 { get { return "An error occurred while trying to execute SQL script. Press any key to continue or end de process by closing it."; } }
 
         #endregion Error messages
     }

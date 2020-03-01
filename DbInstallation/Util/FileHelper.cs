@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace DbInstallation.Util
 {
@@ -255,26 +254,6 @@ namespace DbInstallation.Util
                     throw new ArgumentException(Messages.ErrorMessage014);
             }
 
-            if (dbType == ProductDbType.SqlServer)
-            {
-                //TODO: Rever ao passar por esse trecho no Sql Server (reaproveitar códigos acima...)
-                if (operationType == OperationType.Install)
-                {
-                    return SqlServerListFolder
-                    .OrderBy(o => o.Key)
-                    .Select(s => GetScriptsPath(dbType, operationType) + s.Value)
-                    .ToList();
-                }
-                else if (operationType == OperationType.Update)
-                {
-                    //TODO
-                }
-            }
-            else 
-            {
-                throw new Exception(Messages.ErrorMessage006);
-            }
-
             throw new ArgumentException(Messages.ErrorMessage007);
         }
 
@@ -287,7 +266,7 @@ namespace DbInstallation.Util
             }
             else
             {
-                Logger.Warn(Messages.ErrorMessage008(path));
+                Logger.Info(Messages.ErrorMessage008(path));
                 return new List<string>();
             }
         }

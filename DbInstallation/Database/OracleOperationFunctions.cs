@@ -6,6 +6,7 @@ using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,6 +18,8 @@ namespace DbInstallation.Database
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger IntegrityLogger = LogManager.GetLogger("integrity");
         private static readonly Logger integrityNlsParametersLogger = LogManager.GetLogger("integrityNlsParameters");
+        
+        private static int RegexTimeout { get => 40000; }
 
         private class DatabaseObjectIntegrity
         {
@@ -61,6 +64,7 @@ namespace DbInstallation.Database
             : base(databaseProperties)
         {
             base.SetConnectionString(ProductConnectionString.GetConnectionString(databaseProperties, ProductDbType.Oracle));
+            Environment.SetEnvironmentVariable("nls_lang", "AMERICAN_AMERICA.WE8MSWIN1252");
         }
 
         public bool TestConnection()
@@ -97,6 +101,7 @@ namespace DbInstallation.Database
         {
             if (!CheckEmptyDatabase())
             {
+                Logger.Error(Messages.ErrorMessage009($@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
                 return false;
             }
 
@@ -161,7 +166,25 @@ namespace DbInstallation.Database
                                 {
                                     sqlCmdAux = command.CommandText = ReplaceDatabaseProperties(sqlCmd);
                                     command.CommandType = CommandType.Text;
-                                    command.ExecuteNonQuery();
+                                    try
+                                    {
+                                        command.ExecuteNonQuery();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                                        if (Common.ContinueExecutionOnScriptError())
+                                        {
+                                            Console.WriteLine(Messages.ErrorMessage026);
+                                            Console.ReadLine();
+                                            continue;
+                                        }
+                                        else
+                                        {
+                                            return false;
+                                        }
+                                    }
+                                    
                                 }
                             }
 
@@ -179,10 +202,9 @@ namespace DbInstallation.Database
                         Console.WriteLine();
                         ValidateDatabaseInstallation();
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
-                        return false;
+                        throw;
                     }
                 }
             }
@@ -338,6 +360,7 @@ namespace DbInstallation.Database
         {
             Dictionary<string, string> nlsDatabaseParameters = GetNlsCharacterSetParameters();
 
+            integrityNlsParametersLogger.Info($@"ENVIROMENT VARIABLE NLS_LANG: {Environment.GetEnvironmentVariable("nls_lang", EnvironmentVariableTarget.Process)}");
             foreach(var item in nlsDatabaseParameters)
             {
                 integrityNlsParametersLogger.Info($@"PARAMETER: {item.Key} | VALUE: {item.Value}");
@@ -486,10 +509,7 @@ namespace DbInstallation.Database
                         throw new Exception(Messages.ErrorMessage003("USER_OBJECTS", $@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
                     }
                 }
-                if (!emptyDatabase) 
-                { 
-                    Logger.Error(Messages.ErrorMessage009($@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}", qtyObjects)); 
-                }
+                
                 return emptyDatabase;
             }
             catch (Exception ex)
@@ -593,14 +613,14 @@ namespace DbInstallation.Database
 
         private static Regex GetRegexPattern(string fileName, string fileContent)
         {
-            Regex regex = new Regex(@"(?<cmd>[\s\S.]+?);\s*[\n\r]");
+            Regex regex = new Regex(@"(?<cmd>[\s\S.]+?);\s*[\n\r]", RegexOptions.None, TimeSpan.FromMilliseconds(RegexTimeout));
             if (IsPlSqlFunctionProceduresPackageTriggerView(fileName))
             {
-                regex = new Regex(@"(?<cmd>[\s\S.]+?;)\s*\/[\n\r]");
+                regex = new Regex(@"(?<cmd>[\s\S.]+?;)\s*\/[\n\r]", RegexOptions.None, TimeSpan.FromMilliseconds(RegexTimeout));
             }
             else if (IsPlatypusSqlCommand(fileName) || ContainExplicitDefinitionForPlSqlCommand(fileContent))
             {
-                regex = new Regex(@"(?<cmd>[^\s\/][\s\S.]+?;)\s*\/");
+                regex = new Regex(@"(?<cmd>[^\s\/][\s\S.]+?;)\s*\/", RegexOptions.None, TimeSpan.FromMilliseconds(RegexTimeout));
             }
             return regex;
         }
@@ -620,18 +640,29 @@ namespace DbInstallation.Database
             List<string> sqlCommandList = new List<string>();
             var content = File.ReadAllText(filePath) + Environment.NewLine; //Adiciona nova linha ao final do conteúdo para o funcionamento correto do regex
 
-            Regex regex = GetRegexPattern(filePath, content);
-            MatchCollection matchCollection = regex.Matches(content);
-
-            foreach (Match match in matchCollection)
+            var sw = Stopwatch.StartNew();
+            try
             {
-                string sqlCommand = match.Groups["cmd"].Value.Trim();
-                if (!IsComment(sqlCommand))
+                Regex regex = GetRegexPattern(filePath, content);
+                MatchCollection matchCollection = regex.Matches(content);
+
+                foreach (Match match in matchCollection)
                 {
-                    sqlCommandList.Add(sqlCommand);
+                    string sqlCommand = match.Groups["cmd"].Value.Trim();
+                    if (!IsComment(sqlCommand))
+                    {
+                        sqlCommandList.Add(sqlCommand);
+                    }
                 }
+                sw.Stop();
+                return sqlCommandList;
             }
-            return sqlCommandList;
+            catch (RegexMatchTimeoutException ex)
+            {
+                sw.Stop();
+                Logger.Fatal(ex, ex.Message);
+                throw;
+            }
         }
 
         private static bool IsComment(string sqlCommand)
@@ -639,7 +670,7 @@ namespace DbInstallation.Database
             string fullCommand = string.Empty;
             if (sqlCommand.StartsWith("--"))
             {
-                Regex regex = new Regex(@"--.+(?<cmd>[\s\S.]*)");
+                Regex regex = new Regex(@"--.+(?<cmd>[\s\S.]*)", RegexOptions.None, TimeSpan.FromMilliseconds(RegexTimeout));
                 MatchCollection matchCollection = regex.Matches(sqlCommand);
                 foreach (Match match in matchCollection)
                 {

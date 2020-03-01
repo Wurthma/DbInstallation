@@ -104,11 +104,17 @@ Os arquivos **.sql* serão executados por ordem alfabética, para manter a ordem
 
 ## Configurações gerais
 
-1. No **appsetting.json** no item **Settings** é possível colocar a descrição do produto/projeto (ProjectDescription). Essa descrição será utilizada para gravar a versão atual do produto no banco de dados.
+1. No **appsetting.json** no item **Settings** é possível colocar a descrição do produto/projeto **(ProjectDescription)**. Essa descrição será utilizada para gravar a versão atual do produto no banco de dados.
 
 2. No diretório **"\Update"** todos os diretórios devem ser numéricos e sequenciais. O nome do  diretório representa o número da versão para qual está sendo atualizada e dentro de cada pasta deve conter os scripts com as alterações daquela versão utilizando a mesma estrutura de pasta mostradas anteriormente nos dicionários.
 
 3. Atualmente a tabela que grava a versão do bando de dados não é parametrizada.
+
+4. Utilize a configuração **OracleIntegrityValidation** do appsettings.json para habilitar (true) ou desabilitar (false) a validação de integridade do oracle. Essa validação é realizada por uma procedure, então se o projeto não possuir a procedure é necessário desabilita-la ou ocorrerão erros durantes a execução (valor padrão false).
+
+5. Utilize a configuração **ContinueExecutionOnScriptError** do appsettings.json para habilitar (true) ou desabilitar (false) a execução dos scripts sql mesmo que ocorra algum erro (valor padrão false).
+
+6. Informe na configuração **VersionToUpdate** para qual versão o sistemas será atualizado.
 
 ## Argumentos
 

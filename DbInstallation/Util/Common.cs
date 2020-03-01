@@ -15,5 +15,8 @@ namespace DbInstallation.Util
             IConfigurationSection configurationSection = configuration.GetSection("Settings").GetSection(settingName);
             return configurationSection.Value;
         }
+
+        public static bool ContinueExecutionOnScriptError() =>
+            GetAppSetting("ContinueExecutionOnScriptError").ToLower() == "true";
     }
 }
