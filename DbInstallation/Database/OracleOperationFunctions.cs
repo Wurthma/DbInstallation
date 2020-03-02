@@ -713,7 +713,7 @@ namespace DbInstallation.Database
                 }
 
                 var date = DateTime.Now;
-                FileHelper.CreateSqlSciptFile(ProductDbType.Oracle, $@"COMPARE_V{version}_{date.Year}{date.Month}{date.Day}_{date.Hour}{date.Minute}{date.Second}", fileContent);
+                FileHelper.CreateSqlScriptFile(ProductDbType.Oracle, $@"COMPARE_V{version}_{date.Year}{date.Month}{date.Day}_{date.Hour}{date.Minute}{date.Second}", fileContent);
             }
             else
             {

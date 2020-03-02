@@ -144,7 +144,7 @@ namespace DbInstallation.Util
             return foldersCreated;
         }
 
-        public static bool CreateSqlSciptFile(ProductDbType dbType, string fileName, string fileContent)
+        public static bool CreateSqlScriptFile(ProductDbType dbType, string fileName, string fileContent)
         {
             string filePath = $@"{GetBaseFolder(dbType)}\{fileName}.sql";
             if (File.Exists(filePath))
