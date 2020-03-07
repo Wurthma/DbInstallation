@@ -154,6 +154,7 @@ namespace DbInstallation.Database
                 oracleConnection.Open();
                 using (var command = new OracleCommand() { Connection = oracleConnection })
                 {
+                    SetOracleNlsLengthSemantics(command);
                     string sqlCmdAux = string.Empty;
                     try
                     {
@@ -184,7 +185,6 @@ namespace DbInstallation.Database
                                             return false;
                                         }
                                     }
-                                    
                                 }
                             }
 
@@ -209,6 +209,25 @@ namespace DbInstallation.Database
                 }
             }
             return true;
+        }
+
+        private void SetOracleNlsLengthSemantics(OracleCommand command)
+        {
+            string sqlCmd = $@"declare
+                                v_s_CharacterSet VARCHAR2(160);
+                            begin
+                                select VALUE
+                                into v_s_CharacterSet
+                                from NLS_DATABASE_PARAMETERS
+                                where PARAMETER = 'NLS_CHARACTERSET';
+                                if v_s_CharacterSet in ('UTF8', 'AL32UTF8') then
+                                    execute immediate 'alter session set nls_length_semantics=char';
+                                end if;
+                            end;";
+
+            command.CommandText = ReplaceDatabaseProperties(sqlCmd);
+            command.CommandType = CommandType.Text;
+            command.ExecuteNonQuery();
         }
 
         private void ValidateDatabaseInstallation()

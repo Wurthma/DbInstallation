@@ -11,8 +11,9 @@ namespace DbInstallation
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly Logger othersLogger = LogManager.GetLogger("othersLog");
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
+            Environment.ExitCode = 0;
             Logger.Info(Messages.Message015);
             Console.WriteLine();
             try
@@ -20,13 +21,16 @@ namespace DbInstallation
                 if(args.Length > 0)
                 {
                     ExecuteArguments(args);
-                    return;
+                    return Environment.ExitCode;
                 }
                 SelectDatabase(new ProductDatabase());
+                return Environment.ExitCode;
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+                Environment.ExitCode = -1;
+                return Environment.ExitCode;
             }
         }
 
@@ -40,6 +44,7 @@ namespace DbInstallation
                     if (!FileHelper.CreateNextUpdateFolders())
                     {
                         othersLogger.Error(Messages.ErrorMessage020);
+                        Environment.ExitCode = -1;
                     }
                 }
                 else if (argMaster == "-oracle")
@@ -53,7 +58,7 @@ namespace DbInstallation
                     else
                     {
                         othersLogger.Error(Messages.ErrorMessage023);
-                        return;
+                        Environment.ExitCode = -1;
                     }
                 }
                 else if (argMaster == "-sqlserver")
@@ -76,10 +81,16 @@ namespace DbInstallation
                         else
                         {
                             othersLogger.Error(Messages.ErrorMessage023);
+                            Environment.ExitCode = -1;
                             return;
                         }
 
                         SetConnectionStartDatabaseOperation(ProductDbType.SqlServer, databaseProperties, operation);
+                    }
+                    else
+                    {
+                        othersLogger.Error(Messages.ErrorMessage023);
+                        Environment.ExitCode = -1;
                     }
                 }
             }
