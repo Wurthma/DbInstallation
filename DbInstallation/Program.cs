@@ -43,7 +43,7 @@ namespace DbInstallation
                     }
                 }
                 else if (argMaster == "-oracle")
-                {// -oracle owner password tnsname td ti [i|u|gint]
+                {// -oracle owner password tnsname td ti [i|u|gint|compare]
                     if(args.Length == 7)
                     {
                         var databaseProperties = new DatabaseProperties(args[1], args[2], args[3], args[4], args[5]);
@@ -57,7 +57,7 @@ namespace DbInstallation
                     }
                 }
                 else if (argMaster == "-sqlserver")
-                {// -sqlserver user password server databaseName install ||OR|| -sqlserver trusted server databaseName [i|u|gint]
+                {// -sqlserver user password server databaseName install ||OR|| -sqlserver trusted server databaseName [i|u]
                     if (args.Length >= 4)
                     {
                         DatabaseProperties databaseProperties;

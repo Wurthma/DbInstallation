@@ -94,7 +94,8 @@ Os arquivos **.sql* serão executados por ordem alfabética, para manter a ordem
  4. Arquivos nos diretórios Platypus, Function, Procedures, Package, Trigger e View devem separar cada bloco Pl/Sql com o caracter **"/"** do Oracle. Dessa forma podem ser escritos vários blocos Pl/Sql em um mesmo arquivo **.sql** (se há um único bloco o final dele também deve utilizar o caracter).
  5. No **appsetting.json** no item **Settings** é possível configurar uma forma explicita de indicar que um arquivo utiliza blocos Pl/Sql para que o mesmo utilize o Regex corretamente. Utilize a configuração **ExplicitSetPlSqlCommand** e todo arquivo que conter o texto definido utilizará o Regex para capturar blocos Pl/Sql.
 	 - **Atenção:** se deseja utilizar blocos Pl/Sql em qualquer diretório que não seja algum do item #4, será necessário o uso dessa configuração.
- 6. **Não utilizar nenhum comando do Sqlplus**, o driver do Oracle não reconhece esses comandos.
+ 6. O parâmetro **ExplicitSetScriptLoadData**, define um comentário que pode ser colocado em arquivo de grande carga de dados do oracle, isso evitará o uso de regex e utilizará um bloco "Begin End" em torno do mesmo para melhorar performance.
+ 7. **Não utilizar nenhum comando do Sqlplus**, o driver do Oracle não reconhece esses comandos.
 
 **SQL Server:**
 
@@ -120,7 +121,7 @@ Os arquivos **.sql* serão executados por ordem alfabética, para manter a ordem
 
 **-newupdt**: cria a próxima pasta de update para Oracle e Sql Server. Se a ultima pasta  é a "95" automaticamente será criada toda estrutura da "96".
 
-**-oracle {owner} {password} {tnsname} {tablespaceData} {tablespaceIndex} {i | u | gint}**: argumentos usados para instalação, atualização ou geração da validação de integridade do oracle ("i" para instalação, "u" para atualização ou gint para "generate integrity validation").
+**-oracle {owner} {password} {tnsname} {tablespaceData} {tablespaceIndex} {i | u | gint | compare}**: argumentos usados para instalação, atualização ou geração da validação de integridade do oracle ("i" para instalação, "u" para atualização, gint para "generate integrity validation" ou compare para gerar log de integridade).
 
 **-sqlserver [{user}] [{password}] {server} {databaseName} {i | u}**: argumentos para instalação ou atualização do Sql Server ("i" para instalação e "u" para atualização).
 

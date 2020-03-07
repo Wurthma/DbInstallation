@@ -13,5 +13,7 @@ namespace DbInstallation.Interfaces
         bool CheckEmptyDatabase();
 
         void GenerateIntegrityValidation();
+
+        bool GenerateIntegrityLog();
     }
 }

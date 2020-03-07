@@ -265,5 +265,10 @@ namespace DbInstallation.Database
         {
             throw new NotImplementedException();
         }
+
+        public bool GenerateIntegrityLog()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

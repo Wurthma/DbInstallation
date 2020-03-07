@@ -217,16 +217,7 @@ namespace DbInstallation.Database
             LogNlsCharacterSetParameters();
             CompileObjects();
             CompileObjects();
-            if(IsOracleIntegrityValidationEnable())
-            {
-                LoadDatabaseIntegrityHash();
-            }
-            else
-            {
-                Console.WriteLine();
-                IntegrityLogger.Warn(Messages.Message016);
-                Console.WriteLine();
-            }
+            LoadDatabaseIntegrityHash();
         }
 
         private void CompileObjects()
@@ -253,38 +244,48 @@ namespace DbInstallation.Database
 
         private bool LoadDatabaseIntegrityHash(bool generate = false)
         {
-            using (var oracleConnection = new OracleConnection(ConnectionString))
+            if (IsOracleIntegrityValidationEnable())
             {
-                Environment.SetEnvironmentVariable("nls_lang", "AMERICAN_AMERICA.WE8MSWIN1252");
-                oracleConnection.Open();
-                using (var command = new OracleCommand() { Connection = oracleConnection })
+                using (var oracleConnection = new OracleConnection(ConnectionString))
                 {
-                    string sqlCmdAux = string.Empty;
-                    try
+                    Environment.SetEnvironmentVariable("nls_lang", "AMERICAN_AMERICA.WE8MSWIN1252");
+                    oracleConnection.Open();
+                    using (var command = new OracleCommand() { Connection = oracleConnection })
                     {
-                        command.CommandText = "PRC_CMP_CARREGA_INTEGRID_HASH";
-                        command.CommandType = CommandType.StoredProcedure;
-                        command.Parameters.Add("pi_s_schema_owner", OracleDbType.Varchar2, ParameterDirection.Input).Value = DatabaseProperties.DatabaseUser;
-                        if (generate)
+                        string sqlCmdAux = string.Empty;
+                        try
                         {
-                            command.Parameters.Add("pi_s_operacao", OracleDbType.Varchar2, ParameterDirection.Input).Value = "GENERATE";
+                            command.CommandText = "PRC_CMP_CARREGA_INTEGRID_HASH";
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.Add("pi_s_schema_owner", OracleDbType.Varchar2, ParameterDirection.Input).Value = DatabaseProperties.DatabaseUser;
+                            if (generate)
+                            {
+                                command.Parameters.Add("pi_s_operacao", OracleDbType.Varchar2, ParameterDirection.Input).Value = "GENERATE";
+                            }
+                            command.ExecuteNonQuery();
                         }
-                        command.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                        }
                     }
                 }
+                if (!generate)
+                {
+                    return GenerateIntegrityLog();
+                }
+                return true;
             }
-            if (!generate)
+            else
             {
-                return GenerateIntegrityLog();
+                Console.WriteLine();
+                IntegrityLogger.Warn(Messages.Message016);
+                Console.WriteLine();
             }
-            return true;
+            return false;
         }
 
-        private bool GenerateIntegrityLog()
+        public bool GenerateIntegrityLog()
         {
             List<DatabaseObjectIntegrity> listDatabaseObjectIntegrity = GetDatabaseIntegrityResult();
 
@@ -643,6 +644,12 @@ namespace DbInstallation.Database
             var sw = Stopwatch.StartNew();
             try
             {
+                if (content.Contains(Common.GetAppSetting("ExplicitSetScriptLoadData")))
+                {
+                    sqlCommandList.Add($@"BEGIN{Environment.NewLine}{content}{Environment.NewLine}END;");
+                    return sqlCommandList;
+                }
+
                 Regex regex = GetRegexPattern(filePath, content);
                 MatchCollection matchCollection = regex.Matches(content);
 

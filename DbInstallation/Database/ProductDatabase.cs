@@ -70,6 +70,11 @@ namespace DbInstallation.Database
                 Logger.Info("Selected script generation for Integrity Validation.");
                 return OperationType.GenerateIntegrityValidation;
             }
+            else if (operation.ToUpper() == "COMPARE")
+            {
+                Logger.Info("Selected Integrity compare execution.");
+                return OperationType.LogIntegrityCompare;
+            }
             return OperationType.None;
         }
 
@@ -92,6 +97,10 @@ namespace DbInstallation.Database
                 else if (operationType == OperationType.GenerateIntegrityValidation)
                 {
                     DatabaseFunctions.GenerateIntegrityValidation();
+                }
+                else if (operationType == OperationType.LogIntegrityCompare)
+                {
+                    DatabaseFunctions.GenerateIntegrityLog();
                 }
                 else
                 {
