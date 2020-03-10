@@ -37,11 +37,15 @@ namespace DbInstallation.Database
                         if (reader.GetInt32(0) == 1)
                             Logger.Info(Messages.Message001($@"{DatabaseProperties.ServerOrTns}/{DatabaseProperties.DatabaseName}"));
                         else
+                        {
+                            Environment.ExitCode = -1;
                             return false;
+                        }
                     }
                     else
                     {
                         Logger.Error(Messages.ErrorMessage002($@"{DatabaseProperties.ServerOrTns}/{DatabaseProperties.DatabaseName}"));
+                        Environment.ExitCode = -1;
                         return false;
                     }
                 }
@@ -50,6 +54,7 @@ namespace DbInstallation.Database
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+                Environment.ExitCode = -1;
                 return false;
             }
         }
@@ -59,6 +64,7 @@ namespace DbInstallation.Database
             if (!CheckEmptyDatabase())
             {
                 Logger.Error(Messages.ErrorMessage009($@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
+                Environment.ExitCode = -1;
                 return false;
             }
 
@@ -72,6 +78,7 @@ namespace DbInstallation.Database
             if (CheckEmptyDatabase())
             {
                 Logger.Error(Messages.ErrorMessage024(DatabaseProperties.DatabaseName, version));
+                Environment.ExitCode = -1;
                 return false;
             }
 
@@ -85,6 +92,7 @@ namespace DbInstallation.Database
             if (currentVersion >= version)
             {
                 Logger.Error(Messages.ErrorMessage016(version, currentVersion));
+                Environment.ExitCode = -1;
                 return false;
             }
 
@@ -100,6 +108,7 @@ namespace DbInstallation.Database
                 Logger.Error(Messages.ErrorMessage021);
                 Logger.Error(Messages.ErrorMessage022);
                 Console.WriteLine();
+                Environment.ExitCode = -1;
                 return false;
             }
         }
@@ -138,6 +147,7 @@ namespace DbInstallation.Database
                                     }
                                     else
                                     {
+                                        Environment.ExitCode = -1;
                                         return false;
                                     }
                                 }
@@ -257,17 +267,20 @@ namespace DbInstallation.Database
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+                Environment.ExitCode = -1;
                 return false;
             }
         }
 
         public void GenerateIntegrityValidation()
         {
+            Environment.ExitCode = -1;
             throw new NotImplementedException();
         }
 
         public bool GenerateIntegrityLog()
         {
+            Environment.ExitCode = -1;
             throw new NotImplementedException();
         }
     }
