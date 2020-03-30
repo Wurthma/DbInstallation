@@ -117,6 +117,8 @@ Os arquivos **.sql* serão executados por ordem alfabética, para manter a ordem
 
 6. Informe na configuração **VersionToUpdate** para qual versão o sistemas será atualizado.
 
+7. Use configuração **MinVersion** para informar a versão mínima para utilizar o update. Deve ser um valor numérico inteiro. Exemplo: se utilizado valor 90, só poderá ser atualizada aplicações que a versão seja 90 ou acima.
+
 ## Argumentos
 
 **-newupdt**: cria a próxima pasta de update para Oracle e Sql Server. Se a ultima pasta  é a "95" automaticamente será criada toda estrutura da "96".

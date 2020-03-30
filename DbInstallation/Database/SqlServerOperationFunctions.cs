@@ -82,6 +82,13 @@ namespace DbInstallation.Database
                 return false;
             }
 
+            if (!ValidateMinimumVersion(version))
+            {
+                Logger.Error(Messages.ErrorMessage029);
+                Environment.ExitCode = -1;
+                return false;
+            }
+
             int currentVersion = GetDatabaseCurrentVersion(Common.GetAppSetting("ProjectDescription"));
             List<string> folderList = FileHelper.ListFolders(ProductDbType.SqlServer, OperationType.Update, currentVersion, version);
 

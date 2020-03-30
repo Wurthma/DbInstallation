@@ -302,6 +302,22 @@ namespace DbInstallation
         /// </summary>
         public static string ErrorMessage026 { get { return "An error occurred while trying to execute SQL script. Press any key to continue or end de process by closing it."; } }
 
+        /// <summary>
+        /// Applcation configuration 'MinVersion' invalid.
+        /// </summary>
+        public static string ErrorMessage027 { get { return @"Applcation configuration 'MinVersion' invalid."; } }
+
+        private static string _errorMessage028 { get { return "The minimum application version to use the update operation is {0} but the current version of application database is {1}."; } }
+        /// <summary>
+        /// The minimum application version to use the update operation is {0} but the current version of application database is {1}.
+        /// </summary>
+        /// <param name="minimumVersion"></param>
+        /// <param name="currentVersion"></param>
+        /// <returns></returns>
+        public static string ErrorMessage028(int minimumVersion, int currentVersion) => string.Format(_errorMessage028, minimumVersion, currentVersion);
+
+        public static string ErrorMessage029 { get { return @"Application version invalid."; } }
+
         #endregion Error messages
     }
 }
