@@ -128,3 +128,6 @@ Os arquivos **.sql* serão executados por ordem alfabética, para manter a ordem
 **-sqlserver [{user}] [{password}] {server} {databaseName} {i | u}**: argumentos para instalação ou atualização do Sql Server ("i" para instalação e "u" para atualização).
 
 **-sqlserver {server} {databaseName} {i | u}**: argumentos para instalação ou atualização do Sql Server com **trusted connection** ("i" para instalação e "u" para atualização).
+
+# License
+[MIT](LICENSE).
