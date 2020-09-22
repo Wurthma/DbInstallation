@@ -1,0 +1,8 @@
+{
+  "name": "badge-it-demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/RocktimSaikia/badge-it-demo.git",
+  "author": "Rocktim Saikia <srocktim61@gmail.com> (https://rocktim.me/)",
+  "license": "MIT"
+}
