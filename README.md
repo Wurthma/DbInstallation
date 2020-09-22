@@ -1,5 +1,5 @@
 
-# DbInstallation
+# DbInstallation 
 
 > Console Application desenvolvido com ASP.NET Core 3.1 para
 > automatização de execução de scripts SQL para instalação e atualização
