@@ -11,5 +11,5 @@ jobs:
         uses: rocktimsaikia/badge-it@master
         with:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_BADGES }}
-          badges: 'license,github_stars'
+          badges: 'gh_license, gh_version, gh_stars'
           badge-style: 'flat-square'
