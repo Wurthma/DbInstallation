@@ -144,8 +144,7 @@ namespace DbInstallation.Database
                             }
 
                             if (folderList.Last() == folder)
-                            {
-                                //Se for a execução de uma atualização, a cada versão concluída, inserir no BD
+                            {//Se for a execução de uma atualização, a cada versão concluída, inserir no BD
                                 if (FileHelper.GetVersionFromDirectoryPath(folder, out int finishedVersion))
                                 {
                                     InsertDatabaseVersion(finishedVersion, Common.GetAppSetting("ProjectDescription"));
