@@ -125,57 +125,55 @@ namespace DbInstallation.Database
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-                using (SqlCommand command = new SqlCommand() { Connection = connection })
+                using SqlCommand command = new SqlCommand() { Connection = connection };
+                string sqlCmdAux = string.Empty;
+                try
                 {
-                    string sqlCmdAux = string.Empty;
-                    try
+                    foreach (string folder in folderList)
                     {
-                        foreach (string folder in folderList)
+                        foreach (string file in FileHelper.ListFiles(folder))
                         {
-                            foreach (string file in FileHelper.ListFiles(folder))
+                            string content = File.ReadAllText(file).Trim();
+                            Logger.Info(Messages.Message007(Path.GetFileName(folder), Path.GetFileName(file)));
+
+                            sqlCmdAux = command.CommandText = content;
+                            command.CommandType = CommandType.Text;
+                            try
                             {
-                                string content = File.ReadAllText(file).Trim();
-                                Logger.Info(Messages.Message007(Path.GetFileName(folder), Path.GetFileName(file)));
-
-                                sqlCmdAux = command.CommandText = content;
-                                command.CommandType = CommandType.Text;
-                                try
-                                {
-                                    command.ExecuteNonQuery();
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
-                                    if (Common.ContinueExecutionOnScriptError())
-                                    {
-                                        Console.WriteLine(Messages.ErrorMessage026);
-                                        Console.ReadLine();
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        Environment.ExitCode = -1;
-                                        return false;
-                                    }
-                                }
+                                command.ExecuteNonQuery();
                             }
-
-                            if (folderList.Last() == folder)
-                            {//Se for a execução de uma atualização, a cada versão concluída, inserir no BD
-                                if (FileHelper.GetVersionFromDirectoryPath(folder, out int finishedVersion))
+                            catch (Exception ex)
+                            {
+                                Logger.Error(ex, Messages.ErrorMessage010(sqlCmdAux));
+                                if (Common.ContinueExecutionOnScriptError())
                                 {
-                                    InsertDatabaseVersion(finishedVersion, Common.GetAppSetting("ProjectDescription"));
+                                    Console.WriteLine(Messages.ErrorMessage026);
+                                    Console.ReadLine();
+                                    continue;
+                                }
+                                else
+                                {
+                                    Environment.ExitCode = -1;
+                                    return false;
                                 }
                             }
                         }
-                        Console.WriteLine();
-                        Logger.Info(Messages.Message008);
-                        Console.WriteLine();
+
+                        if (folderList.Last() == folder)
+                        {//Se for a execução de uma atualização, a cada versão concluída, inserir no BD
+                            if (FileHelper.GetVersionFromDirectoryPath(folder, out int finishedVersion))
+                            {
+                                InsertDatabaseVersion(finishedVersion, Common.GetAppSetting("ProjectDescription"));
+                            }
+                        }
                     }
-                    catch
-                    {
-                        throw;
-                    }
+                    Console.WriteLine();
+                    Logger.Info(Messages.Message008);
+                    Console.WriteLine();
+                }
+                catch
+                {
+                    throw;
                 }
             }
             return true;
