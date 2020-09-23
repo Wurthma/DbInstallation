@@ -1,0 +1,15 @@
+name: 'build'
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: add badges
+        uses: rocktimsaikia/badge-it@master
+        with:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN_BADGES }}
+          badges: 'gh_stars'
+          badge-style: 'flat-square'

@@ -102,6 +102,7 @@ namespace DbInstallation.Database
             if (!CheckEmptyDatabase())
             {
                 Logger.Error(Messages.ErrorMessage009($@"{DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}"));
+                Environment.ExitCode = -1;
                 return false;
             }
 
@@ -115,6 +116,14 @@ namespace DbInstallation.Database
             if (CheckEmptyDatabase())
             {
                 Logger.Error(Messages.ErrorMessage024(DatabaseProperties.DatabaseUser, version));
+                Environment.ExitCode = -1;
+                return false;
+            }
+
+            if (!ValidateMinimumVersion(version))
+            {
+                Logger.Error(Messages.ErrorMessage029);
+                Environment.ExitCode = -1;
                 return false;
             }
 
@@ -128,6 +137,7 @@ namespace DbInstallation.Database
             if(currentVersion >= version)
             {
                 Logger.Error(Messages.ErrorMessage016(version, currentVersion));
+                Environment.ExitCode = -1;
                 return false;
             }
 
@@ -143,6 +153,7 @@ namespace DbInstallation.Database
                 Logger.Error(Messages.ErrorMessage021);
                 Logger.Error(Messages.ErrorMessage022);
                 Console.WriteLine();
+                Environment.ExitCode = -1;
                 return false;
             }
         }
@@ -182,6 +193,7 @@ namespace DbInstallation.Database
                                         }
                                         else
                                         {
+                                            Environment.ExitCode = -1;
                                             return false;
                                         }
                                     }
@@ -364,6 +376,7 @@ namespace DbInstallation.Database
                         catch (Exception ex)
                         {
                             Logger.Error(ex, Messages.ErrorMessage011);
+                            Environment.ExitCode = -1;
                         }
                     }
                 }
@@ -372,6 +385,7 @@ namespace DbInstallation.Database
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+                Environment.ExitCode = -1;
                 return listDatabaseObjectIntegrity;
             }
         }
@@ -412,6 +426,7 @@ namespace DbInstallation.Database
                         catch (Exception ex)
                         {
                             Logger.Error(ex, Messages.ErrorMessage011);
+                            Environment.ExitCode = -1;
                         }
                     }
                 }
@@ -420,6 +435,7 @@ namespace DbInstallation.Database
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+                Environment.ExitCode = -1;
                 return nlsDatabaseParameters;
             }
         }
@@ -535,6 +551,7 @@ namespace DbInstallation.Database
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+                Environment.ExitCode = -1;
                 return false;
             }
         }
@@ -549,6 +566,7 @@ namespace DbInstallation.Database
             else
             {
                 Logger.Error($"Owner user cannot be {userDb}");
+                Environment.ExitCode = -1;
                 return false;
             }
         }
@@ -574,12 +592,16 @@ namespace DbInstallation.Database
                     {
                         validTablespace = reader.GetInt32(0) == 1;
                         if (!validTablespace)
+                        {
                             Logger.Error($@"Invalid tablespace {tablespace}.");
+                            Environment.ExitCode = -1;
+                        }
                     }
                     else
                     {
                         Logger.Error($@"Failed to check tablespace to database {DatabaseProperties.DatabaseUser}/{DatabaseProperties.ServerOrTns}.");
                         validTablespace = false;
+                        Environment.ExitCode = -1;
                     }
                 }
                 return validTablespace;
@@ -587,6 +609,7 @@ namespace DbInstallation.Database
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+                Environment.ExitCode = -1;
                 return false;
             }
         }
@@ -627,6 +650,7 @@ namespace DbInstallation.Database
             catch (Exception ex)
             {
                 Logger.Error(ex, ex.Message);
+                Environment.ExitCode = -1;
                 return false;
             }
         }
